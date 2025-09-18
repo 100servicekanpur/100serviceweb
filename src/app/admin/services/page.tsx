@@ -9,7 +9,6 @@ import {
   CheckIcon,
   XMarkIcon,
   EyeIcon,
-  PencilIcon,
   TrashIcon,
   ClockIcon,
   StarIcon,
@@ -53,6 +52,7 @@ export default function AdminServicesPage() {
 
   useEffect(() => {
     filterServices()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [services, searchQuery, selectedStatus])
 
   const fetchServices = async () => {
@@ -107,7 +107,7 @@ export default function AdminServicesPage() {
 
       // Update local state
       setServices(services.map(service => 
-        service.id === serviceId ? { ...service, status: newStatus as any } : service
+        service.id === serviceId ? { ...service, status: newStatus as 'active' | 'inactive' | 'pending' } : service
       ))
     } catch (error) {
       console.error('Error updating service status:', error)
@@ -138,15 +138,6 @@ export default function AdminServicesPage() {
       case 'inactive': return 'bg-gray-100 text-gray-800'
       case 'pending': return 'bg-yellow-100 text-yellow-800'
       default: return 'bg-gray-100 text-gray-800'
-    }
-  }
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'active': return <CheckIcon className="w-4 h-4" />
-      case 'pending': return <ClockIcon className="w-4 h-4" />
-      case 'inactive': return <XMarkIcon className="w-4 h-4" />
-      default: return null
     }
   }
 

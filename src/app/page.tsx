@@ -12,18 +12,14 @@ import {
   WrenchScrewdriverIcon,
   BoltIcon,
   ShieldCheckIcon,
-  MagnifyingGlassIcon,
   UserGroupIcon,
   CogIcon,
   SparklesIcon,
-  HomeIcon,
   ScissorsIcon,
-  BeakerIcon,
   ComputerDesktopIcon
 } from '@heroicons/react/24/outline'
 
 export default function Home() {
-  const [currentSlide, setCurrentSlide] = useState(0)
 
   const heroSlides = [
     {
@@ -61,13 +57,6 @@ export default function Home() {
     }
   ]
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroSlides.length)
-    }, 5000)
-    return () => clearInterval(timer)
-  }, [heroSlides.length])
-
   return (
     <div className="min-h-screen bg-white">
       <Header />
@@ -95,14 +84,14 @@ export default function Home() {
                   <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mb-3 group-hover:bg-gray-200 group-hover:scale-110 transition-all duration-300">
                     <ScissorsIcon className="w-6 h-6 text-gray-700" />
                   </div>
-                  <h3 className="text-sm font-semibold text-gray-900">Women's Salon & Spa</h3>
+                  <h3 className="text-sm font-semibold text-gray-900">Women&apos;s Salon & Spa</h3>
                 </div>
 
                 <div className="group bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mb-3 group-hover:bg-gray-200 group-hover:scale-110 transition-all duration-300">
                     <UserGroupIcon className="w-6 h-6 text-gray-700" />
                   </div>
-                  <h3 className="text-sm font-semibold text-gray-900">Men's Salon & Massage</h3>
+                  <h3 className="text-sm font-semibold text-gray-900">Men&apos;s Salon & Massage</h3>
                 </div>
 
                 <div className="group bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer">

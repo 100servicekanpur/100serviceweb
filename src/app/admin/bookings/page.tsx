@@ -1,13 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import AdminProtected from '@/components/admin/AdminProtected';
 import { 
   MagnifyingGlassIcon, 
-  FunnelIcon, 
   EyeIcon,
-  PencilIcon,
   CheckCircleIcon,
   XCircleIcon,
   ClockIcon,
@@ -53,6 +51,7 @@ export default function AdminBookings() {
 
   useEffect(() => {
     filterBookings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookings, searchTerm, statusFilter, paymentFilter]);
 
   const fetchBookings = async () => {
@@ -118,18 +117,18 @@ export default function AdminBookings() {
     setFilteredBookings(filtered);
   };
 
-  const updateBookingStatus = async (bookingId: string, newStatus: string) => {
+  const updateBookingStatus = async (id: string, status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled') => {
     try {
       const { error } = await supabase
         .from('bookings')
-        .update({ status: newStatus })
-        .eq('id', bookingId);
+        .update({ status: status })
+        .eq('id', id);
 
       if (error) throw error;
 
       setBookings(prev => prev.map(booking =>
-        booking.id === bookingId
-          ? { ...booking, booking_status: newStatus as any }
+        booking.id === id
+          ? { ...booking, booking_status: status }
           : booking
       ));
     } catch (error) {
@@ -137,7 +136,7 @@ export default function AdminBookings() {
     }
   };
 
-  const updatePaymentStatus = async (bookingId: string, newStatus: string) => {
+  const updatePaymentStatus = async (bookingId: string, newStatus: 'pending' | 'paid' | 'failed' | 'refunded') => {
     try {
       const { error } = await supabase
         .from('bookings')
@@ -148,7 +147,7 @@ export default function AdminBookings() {
 
       setBookings(prev => prev.map(booking =>
         booking.id === bookingId
-          ? { ...booking, payment_status: newStatus as any }
+          ? { ...booking, payment_status: newStatus }
           : booking
       ));
     } catch (error) {
@@ -387,7 +386,7 @@ export default function AdminBookings() {
                     <td className="px-6 py-4">
                       <select
                         value={booking.booking_status}
-                        onChange={(e) => updateBookingStatus(booking.id, e.target.value)}
+                        onChange={(e) => updateBookingStatus(booking.id, e.target.value as 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled')}
                         className={`text-xs px-2 py-1 rounded-full border-0 font-semibold ${getStatusColor(booking.booking_status)}`}
                       >
                         <option value="pending">Pending</option>
@@ -400,7 +399,7 @@ export default function AdminBookings() {
                     <td className="px-6 py-4">
                       <select
                         value={booking.payment_status}
-                        onChange={(e) => updatePaymentStatus(booking.id, e.target.value)}
+                        onChange={(e) => updatePaymentStatus(booking.id, e.target.value as 'pending' | 'paid' | 'failed' | 'refunded')}
                         className={`text-xs px-2 py-1 rounded-full border-0 font-semibold ${getStatusColor(booking.payment_status)}`}
                       >
                         <option value="pending">Pending</option>

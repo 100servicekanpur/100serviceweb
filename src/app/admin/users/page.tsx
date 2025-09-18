@@ -6,11 +6,8 @@ import AdminProtected from '@/components/admin/AdminProtected'
 import { supabase } from '@/lib/supabase'
 import {
   MagnifyingGlassIcon,
-  FunnelIcon,
   PlusIcon,
-  PencilIcon,
   TrashIcon,
-  EyeIcon,
   UserCircleIcon
 } from '@heroicons/react/24/outline'
 
@@ -33,7 +30,6 @@ export default function AdminUsersPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedRole, setSelectedRole] = useState<string>('all')
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
-  const [showUserModal, setShowUserModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
   useEffect(() => {
@@ -42,6 +38,7 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     filterUsers()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [users, searchQuery, selectedRole])
 
   const fetchUsers = async () => {
@@ -92,7 +89,7 @@ export default function AdminUsersPage() {
 
       // Update local state
       setUsers(users.map(user => 
-        user.id === userId ? { ...user, role: newRole as any } : user
+        user.id === userId ? { ...user, role: newRole as 'customer' | 'provider' | 'admin' } : user
       ))
     } catch (error) {
       console.error('Error updating user role:', error)
@@ -269,15 +266,6 @@ export default function AdminUsersPage() {
                           {new Date(user.created_at).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                          <button
-                            onClick={() => {
-                              setSelectedUser(user)
-                              setShowUserModal(true)
-                            }}
-                            className="text-gray-600 hover:text-gray-900"
-                          >
-                            <EyeIcon className="w-5 h-5" />
-                          </button>
                           <button
                             onClick={() => {
                               setSelectedUser(user)

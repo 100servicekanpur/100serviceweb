@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import AdminLayout from '@/components/admin/AdminLayout'
 import {
-  ChartBarIcon,
   UserGroupIcon,
   CogIcon,
   ShoppingBagIcon,
@@ -116,7 +115,7 @@ export default function AdminDashboard() {
         {/* Header */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-2">Welcome back! Here's what's happening with 100Service today.</p>
+          <p className="text-gray-600 mt-2">Welcome back! Here&apos;s what&apos;s happening with 100Service today.</p>
         </div>
 
         {/* Stats Cards */}

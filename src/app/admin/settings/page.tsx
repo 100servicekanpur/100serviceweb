@@ -9,9 +9,7 @@ import {
   GlobeAltIcon,
   CurrencyRupeeIcon,
   BellIcon,
-  EnvelopeIcon,
   ShieldCheckIcon,
-  PhotoIcon,
   DocumentTextIcon,
   CheckIcon,
   XMarkIcon
@@ -118,7 +116,7 @@ export default function AdminSettingsPage() {
     try {
       setIsSaving(true)
       
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('site_settings')
         .upsert([{
           ...settings,
@@ -138,7 +136,7 @@ export default function AdminSettingsPage() {
     }
   }
 
-  const handleInputChange = (field: keyof SiteSettings, value: any) => {
+  const handleInputChange = (field: keyof SiteSettings, value: string | number | boolean) => {
     setSettings(prev => ({
       ...prev,
       [field]: value

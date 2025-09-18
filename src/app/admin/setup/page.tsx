@@ -77,9 +77,9 @@ export default function AdminSetupPage() {
 
       setMessage('Admin user created successfully!')
       setIsComplete(true)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating admin user:', error)
-      setMessage(`Error: ${error.message}`)
+      setMessage(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsLoading(false)
     }
