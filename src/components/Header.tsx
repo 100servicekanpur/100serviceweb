@@ -146,7 +146,7 @@ export default function Header() {
                   className="flex items-center space-x-2 p-3 bg-gray-600/90 backdrop-blur-xl rounded-xl border border-gray-500 hover:bg-gray-700 transition-all duration-300"
                 >
                   <UserCircleIcon className="w-5 h-5 text-white" />
-                  <span className="hidden md:block text-white font-medium">{user?.name?.split(' ')[0] || 'User'}</span>
+                  <span className="hidden md:block text-white font-medium">{user?.full_name?.split(' ')[0] || 'User'}</span>
                   <ChevronDownIcon className="w-4 h-4 text-white" />
                 </button>
               ) : (

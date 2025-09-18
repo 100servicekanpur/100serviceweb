@@ -11,8 +11,7 @@ import {
   BellIcon,
   ShieldCheckIcon,
   DocumentTextIcon,
-  CheckIcon,
-  XMarkIcon
+  CheckIcon
 } from '@heroicons/react/24/outline'
 
 interface SiteSettings {

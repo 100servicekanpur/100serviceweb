@@ -215,7 +215,7 @@ export default function Header() {
                   >
                     <UserCircleIcon className="w-6 h-6 text-gray-600" />
                     <span className="hidden sm:block text-gray-700 font-medium">
-                      {user?.name || 'User'}
+                      {user?.full_name || 'User'}
                     </span>
                     <ChevronDownIcon className="w-4 h-4 text-gray-500" />
                   </button>

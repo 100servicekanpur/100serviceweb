@@ -152,11 +152,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               <div className="flex items-center space-x-3">
                 <div className="h-8 w-8 bg-gray-300 rounded-full flex items-center justify-center">
                   <span className="text-sm font-medium text-gray-700">
-                    {user?.name?.charAt(0) || user?.email?.charAt(0) || 'A'}
+                    {user?.full_name?.charAt(0) || user?.email?.charAt(0) || 'A'}
                   </span>
                 </div>
                 <div className="hidden md:block">
-                  <p className="text-sm font-medium text-gray-900">{user?.name || 'Admin'}</p>
+                  <p className="text-sm font-medium text-gray-900">{user?.full_name || 'Admin'}</p>
                   <p className="text-xs text-gray-500">{user?.email}</p>
                 </div>
               </div>
