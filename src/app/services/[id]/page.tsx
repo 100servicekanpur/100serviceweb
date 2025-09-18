@@ -6,19 +6,13 @@ import Link from 'next/link'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import {
-  StarIcon as StarOutlineIcon,
   HeartIcon,
   ArrowLeftIcon,
   CheckIcon,
   ClockIcon,
-  MapPinIcon,
   PhoneIcon,
-  CurrencyDollarIcon,
-  CalendarIcon,
-  UserIcon,
   ChatBubbleLeftRightIcon,
   CheckBadgeIcon,
-  FireIcon,
   ShieldCheckIcon,
   TruckIcon
 } from '@heroicons/react/24/outline'
@@ -263,7 +257,7 @@ export default function ServiceDetailPage() {
 
             {/* Features */}
             <div className="bg-white rounded-xl shadow-sm p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">What's Included</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">What&apos;s Included</h2>
               <div className="grid md:grid-cols-2 gap-4">
                 {service.features.map((feature, index) => (
                   <div key={index} className="flex items-center">

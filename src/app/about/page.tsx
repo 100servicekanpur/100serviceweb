@@ -10,8 +10,7 @@ import {
   ClockIcon,
   ShieldCheckIcon,
   HeartIcon,
-  TrophyIcon,
-  ChatBubbleLeftRightIcon
+  TrophyIcon
 } from '@heroicons/react/24/outline'
 
 export default function AboutPage() {
@@ -78,7 +77,7 @@ export default function AboutPage() {
               About 100Service
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              We're on a mission to make home services simple, reliable, and accessible for everyone. 
+              We&apos;re on a mission to make home services simple, reliable, and accessible for everyone. 
               Connecting you with trusted professionals who deliver exceptional results.
             </p>
           </div>
@@ -116,7 +115,7 @@ export default function AboutPage() {
                 </p>
                 <p>
                   Starting in Mumbai, we began building a network of verified professionals who 
-                  shared our commitment to quality and customer satisfaction. Today, we're proud 
+                  shared our commitment to quality and customer satisfaction. Today, we&apos;re proud 
                   to serve customers across 25+ cities, having completed over 100,000 services 
                   with a 4.8-star average rating.
                 </p>

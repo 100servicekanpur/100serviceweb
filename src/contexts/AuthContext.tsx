@@ -84,8 +84,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       toast.success('Login successful!')
       return { success: true }
-    } catch (error: any) {
-      const message = error.message || 'Login failed'
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Login failed'
       toast.error(message)
       return { success: false, error: message }
     } finally {
@@ -137,8 +137,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       toast.success('Registration successful! Please check your email for verification.')
       return { success: true }
-    } catch (error: any) {
-      const message = error.message || 'Registration failed'
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Registration failed'
       toast.error(message)
       return { success: false, error: message }
     } finally {
@@ -152,7 +152,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null)
       setSupabaseUser(null)
       toast.success('Logged out successfully')
-    } catch (error: any) {
+    } catch {
       toast.error('Error logging out')
     }
   }

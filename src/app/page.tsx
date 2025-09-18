@@ -5,16 +5,12 @@ import Link from 'next/link'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
   StarIcon,
   ClockIcon,
   CheckBadgeIcon,
   ArrowRightIcon,
   WrenchScrewdriverIcon,
-  HomeIcon,
   BoltIcon,
-  PaintBrushIcon,
   ShieldCheckIcon
 } from '@heroicons/react/24/outline'
 
@@ -62,7 +58,7 @@ export default function Home() {
       setCurrentSlide((prev) => (prev + 1) % heroSlides.length)
     }, 5000)
     return () => clearInterval(timer)
-  }, [])
+  }, [heroSlides.length])
 
   return (
     <div className="min-h-screen bg-gray-50">

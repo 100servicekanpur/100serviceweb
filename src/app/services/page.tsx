@@ -1,20 +1,15 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import {
   MagnifyingGlassIcon,
   FunnelIcon,
-  StarIcon,
-  MapPinIcon,
-  ClockIcon,
-  CurrencyDollarIcon,
   HeartIcon,
   ArrowRightIcon,
-  CheckBadgeIcon,
-  FireIcon
+  CheckBadgeIcon
 } from '@heroicons/react/24/outline'
 import { StarIcon as StarSolidIcon, HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid'
 
@@ -50,7 +45,7 @@ export default function ServicesPage() {
   const [favorites, setFavorites] = useState(new Set<number>())
 
   // Mock data - in real app this would come from Supabase
-  const mockServices: Service[] = [
+  const mockServices: Service[] = useMemo(() => [
     {
       id: 1,
       name: "Electrical Repair & Installation",
@@ -141,7 +136,7 @@ export default function ServicesPage() {
       badges: ["Verified", "Genuine Parts"],
       features: ["Genuine Parts", "Expert Technicians", "Warranty", "Emergency Service"]
     }
-  ]
+  ], [])
 
   const categories: Category[] = [
     { id: 'all', name: 'All Services', count: mockServices.length },
@@ -193,7 +188,7 @@ export default function ServicesPage() {
     }
 
     setFilteredServices(filtered)
-  }, [selectedCategory, searchQuery, sortBy, priceRange])
+  }, [selectedCategory, searchQuery, sortBy, priceRange, mockServices])
 
   const toggleFavorite = (serviceId: number) => {
     const newFavorites = new Set(favorites)
@@ -217,7 +212,7 @@ export default function ServicesPage() {
               Professional Services for Your Home
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Browse our wide range of trusted home services. From repairs to renovations, we've got you covered.
+              Browse our wide range of trusted home services. From repairs to renovations, we&apos;ve got you covered.
             </p>
             
             {/* Search Bar */}
@@ -434,7 +429,7 @@ export default function ServicesPage() {
                 <MagnifyingGlassIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">No services found</h3>
                 <p className="text-gray-600">
-                  Try adjusting your filters or search terms to find what you're looking for.
+                  Try adjusting your filters or search terms to find what you&apos;re looking for.
                 </p>
               </div>
             )}
