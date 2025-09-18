@@ -1,5 +1,6 @@
 ﻿'use client'
 
+import React from 'react'
 import Link from 'next/link'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -10,11 +11,12 @@ import {
   ArrowRightIcon,
   WrenchScrewdriverIcon,
   BoltIcon,
-  ShieldCheckIcon
+  ShieldCheckIcon,
+  ScissorsIcon,
+  ComputerDesktopIcon
 } from '@heroicons/react/24/outline'
 
 export default function Home() {
-
   const featuredServices = [
     {
       id: 1,
@@ -37,79 +39,148 @@ export default function Home() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <Header />
       
-      {/* Hero Section */}
-      <section className="relative h-96 lg:h-[500px] overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/30 z-10" />
-        <div className="absolute inset-0 bg-gray-800" />
-        
-        <div className="relative z-20 flex items-center h-full">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-3xl">
-              <h1 className="text-4xl lg:text-6xl font-bold text-white mb-6">
-                Professional Home Services at Your Doorstep
-              </h1>
-              <p className="text-xl lg:text-2xl text-gray-300 mb-8">
-                Trusted experts for all your home repair and maintenance needs
-              </p>
+      {/* Hero Section - Modern Black & White Premium Design */}
+      <section className="relative bg-gradient-to-br from-gray-900 via-black to-gray-800 overflow-hidden">
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="relative container mx-auto px-4 py-24 lg:py-32">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-5xl lg:text-7xl font-bold text-white mb-8 leading-tight">
+              Premium Home Services
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300">
+                At Your Doorstep
+              </span>
+            </h1>
+            <p className="text-xl lg:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
+              Experience luxury home maintenance with our certified professionals. 
+              Quality service, transparent pricing, guaranteed satisfaction.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
               <Link
                 href="/services"
-                className="inline-flex items-center bg-white text-black px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-200"
+                className="group relative px-8 py-4 bg-white text-black font-semibold rounded-full hover:bg-gray-100 transition-all duration-300 flex items-center space-x-3 shadow-xl"
               >
-                Book a Service
-                <ArrowRightIcon className="ml-2 w-5 h-5" />
+                <span>Book Premium Service</span>
+                <ArrowRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
+              <div className="flex items-center space-x-2 text-white">
+                <div className="flex space-x-1">
+                  {[...Array(5)].map((_, i) => (
+                    <StarIcon key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                  ))}
+                </div>
+                <span className="text-gray-300">4.9/5 from 10,000+ customers</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Decorative Elements */}
+        <div className="absolute top-0 left-0 w-72 h-72 bg-white/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-white/3 rounded-full blur-3xl"></div>
+      </section>
+
+      {/* Service Categories - Modern Grid */}
+      <section className="py-20 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+              Professional Services
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Premium quality services delivered by certified experts
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 lg:gap-8">
+            <div className="group bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-2 transition-all duration-300 cursor-pointer">
+              <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center mb-4 group-hover:bg-gray-800 transition-colors">
+                <WrenchScrewdriverIcon className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Home Repair</h3>
+              <p className="text-gray-600 text-sm">Expert repairs for all home issues</p>
+            </div>
+
+            <div className="group bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-2 transition-all duration-300 cursor-pointer">
+              <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center mb-4 group-hover:bg-gray-800 transition-colors">
+                <BoltIcon className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Electrical</h3>
+              <p className="text-gray-600 text-sm">Licensed electricians available</p>
+            </div>
+
+            <div className="group bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-2 transition-all duration-300 cursor-pointer">
+              <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center mb-4 group-hover:bg-gray-800 transition-colors">
+                <ScissorsIcon className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Beauty & Spa</h3>
+              <p className="text-gray-600 text-sm">Premium salon services</p>
+            </div>
+
+            <div className="group bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-2 transition-all duration-300 cursor-pointer">
+              <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center mb-4 group-hover:bg-gray-800 transition-colors">
+                <ComputerDesktopIcon className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Tech Support</h3>
+              <p className="text-gray-600 text-sm">Computer & device repairs</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Featured Services */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-              Popular Services
+      {/* Featured Services - Premium Cards */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+              Featured Services
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Browse our most requested home services
+              Discover our most popular premium services
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {featuredServices.map((service) => (
               <Link
                 key={service.id}
                 href={`/services/${service.id}`}
-                className="bg-white rounded-xl shadow-sm hover:shadow-lg transition duration-200 overflow-hidden group"
+                className="group bg-gradient-to-br from-gray-50 to-white rounded-3xl p-8 shadow-sm border border-gray-100 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
               >
-                <div className="h-48 bg-gray-200"></div>
+                <div className="flex items-center mb-6">
+                  <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center mr-4 group-hover:bg-gray-800 transition-colors">
+                    <service.icon className="w-8 h-8 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-900">{service.name}</h3>
+                    <p className="text-gray-600">{service.description}</p>
+                  </div>
+                </div>
                 
-                <div className="p-6">
-                  <div className="flex items-center mb-3">
-                    <service.icon className="w-8 h-8 text-black mr-3" />
-                    <h3 className="text-lg font-semibold text-gray-900">{service.name}</h3>
-                  </div>
-                  
-                  <p className="text-gray-600 text-sm mb-4">{service.description}</p>
-                  
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center">
-                      <StarIcon className="w-4 h-4 text-yellow-400 mr-1" />
-                      <span className="text-sm font-medium text-gray-900">{service.rating}</span>
-                      <span className="text-sm text-gray-600 ml-1">({service.reviews})</span>
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-2">
+                    <div className="flex space-x-1">
+                      {[...Array(5)].map((_, i) => (
+                        <StarIcon key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      ))}
                     </div>
-                    <div className="text-sm text-gray-600">
-                      From <span className="font-semibold text-gray-900">{service.startingPrice}</span>
-                    </div>
+                    <span className="text-sm font-medium text-gray-900">{service.rating}</span>
+                    <span className="text-sm text-gray-600">({service.reviews} reviews)</span>
                   </div>
-                  
-                  <div className="flex items-center text-black font-medium">
+                  <div className="text-right">
+                    <div className="text-sm text-gray-600">Starting from</div>
+                    <div className="text-2xl font-bold text-gray-900">₹{service.startingPrice}</div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center text-black font-semibold group-hover:text-gray-800 transition-colors">
                     Book Now
-                    <ArrowRightIcon className="w-4 h-4 ml-2" />
+                    <ArrowRightIcon className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                   </div>
+                  <div className="text-sm text-green-600 font-medium">Available Today</div>
                 </div>
               </Link>
             ))}
@@ -117,43 +188,46 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Why Choose Us */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+      {/* Why Choose Us - Modern Design */}
+      <section className="py-20 bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
               Why Choose 100Service?
             </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Premium service quality that exceeds expectations
+            </p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center mx-auto mb-6">
-                <CheckBadgeIcon className="w-8 h-8 text-white" />
+            <div className="group text-center bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all duration-300">
+              <div className="w-20 h-20 bg-gradient-to-br from-black to-gray-800 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                <CheckBadgeIcon className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Verified Professionals</h3>
-              <p className="text-gray-600">
-                All service providers are verified and skilled professionals.
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Verified Professionals</h3>
+              <p className="text-gray-600 leading-relaxed">
+                All service providers are thoroughly vetted, certified, and insured professionals with proven track records.
               </p>
             </div>
             
-            <div className="text-center">
-              <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center mx-auto mb-6">
-                <ShieldCheckIcon className="w-8 h-8 text-white" />
+            <div className="group text-center bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all duration-300">
+              <div className="w-20 h-20 bg-gradient-to-br from-black to-gray-800 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                <ShieldCheckIcon className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Satisfaction Guarantee</h3>
-              <p className="text-gray-600">
-                We stand behind our work and guarantee satisfaction.
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">100% Satisfaction Guarantee</h3>
+              <p className="text-gray-600 leading-relaxed">
+                We stand behind our work with a comprehensive satisfaction guarantee and dedicated customer support.
               </p>
             </div>
             
-            <div className="text-center">
-              <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center mx-auto mb-6">
-                <ClockIcon className="w-8 h-8 text-white" />
+            <div className="group text-center bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all duration-300">
+              <div className="w-20 h-20 bg-gradient-to-br from-black to-gray-800 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                <ClockIcon className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">24/7 Support</h3>
-              <p className="text-gray-600">
-                Round-the-clock support and emergency services.
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">24/7 Emergency Support</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Round-the-clock availability for urgent repairs and emergency services when you need us most.
               </p>
             </div>
           </div>
