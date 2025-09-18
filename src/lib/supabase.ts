@@ -9,11 +9,15 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 export interface User {
   id: string
   email: string
-  name: string
-  role: 'user' | 'partner' | 'admin'
+  full_name: string
   phone?: string
-  is_active: boolean
-  is_email_verified: boolean
+  role: 'customer' | 'provider' | 'admin'
+  avatar_url?: string
+  address?: string
+  city?: string
+  state?: string
+  postal_code?: string
+  is_verified: boolean
   created_at: string
   updated_at: string
 }

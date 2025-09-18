@@ -130,7 +130,7 @@ export default function AdminLoginPage() {
         {/* Demo Credentials */}
         <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
           <p className="text-sm text-blue-300 text-center">
-            <strong>Demo Admin:</strong> admin@100service.in / admin123
+            <strong>Admin Login:</strong> v9ibhav@gmail.com / Vaibhav@1233
           </p>
         </div>
 

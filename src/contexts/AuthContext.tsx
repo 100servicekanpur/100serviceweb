@@ -103,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         password,
         options: {
           data: {
-            name,
+            full_name: name,
             phone,
           }
         }
@@ -122,11 +122,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             {
               id: data.user.id,
               email,
-              name,
+              full_name: name,
               phone,
-              role: 'user',
-              is_active: true,
-              is_email_verified: false,
+              role: 'customer',
+              is_verified: false,
             }
           ])
 

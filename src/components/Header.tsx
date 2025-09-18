@@ -9,7 +9,7 @@ import {
   MagnifyingGlassIcon,
   MapPinIcon,
   BellIcon,
-  ShoppingBagIcon,
+  TicketIcon,
   UserCircleIcon,
   ChevronDownIcon,
   Bars3Icon,
@@ -25,10 +25,10 @@ export default function Header() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [isLocationOpen, setIsLocationOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedLocation, setSelectedLocation] = useState('Delhi NCR')
+  const [selectedLocation, setSelectedLocation] = useState('Tilak Nagar, Kanpur')
   const [isScrolled, setIsScrolled] = useState(false)
 
-  const locations = ['Delhi NCR', 'Mumbai', 'Bangalore', 'Chennai', 'Kolkata']
+  const locations = ['Tilak Nagar, Kanpur', 'Civil Lines, Kanpur', 'Kalyanpur, Kanpur', 'Swaroop Nagar, Kanpur', 'Govind Nagar, Kanpur']
 
   // Handle scroll effect
   useEffect(() => {
@@ -47,10 +47,10 @@ export default function Header() {
   }
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+    <header className={`sticky top-0 left-0 right-0 z-50 transition-all duration-300 ${
       isScrolled 
-        ? 'bg-white/95 backdrop-blur-xl shadow-lg border-b border-gray-200/50' 
-        : 'bg-white/90 backdrop-blur-lg'
+        ? 'bg-white shadow-lg border-b border-gray-200/50' 
+        : 'bg-white shadow-sm'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20">
@@ -110,12 +110,12 @@ export default function Header() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search for services..."
+                  placeholder="Search for services near you"
                   className="flex-1 px-4 py-3 bg-transparent border-0 outline-none text-gray-900 placeholder-gray-500"
                 />
                 <button
                   type="submit"
-                  className="bg-gray-900 text-white px-6 py-3 rounded-r-xl font-medium hover:bg-black transition-colors duration-300"
+                  className="bg-gray-600 text-white px-6 py-3 rounded-r-xl font-medium hover:bg-gray-700 transition-colors duration-300"
                 >
                   Search
                 </button>
@@ -132,10 +132,10 @@ export default function Header() {
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
             </button>
 
-            {/* Shopping Cart */}
+            {/* Coupon */}
             <button className="relative p-3 bg-gray-100/80 backdrop-blur-xl rounded-xl border border-gray-200 hover:bg-gray-200/80 transition-all duration-300 group">
-              <ShoppingBagIcon className="w-5 h-5 text-gray-700 group-hover:text-gray-900" />
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-gray-900 text-white text-xs rounded-full flex items-center justify-center font-bold">2</span>
+              <TicketIcon className="w-5 h-5 text-gray-700 group-hover:text-gray-900" />
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-gray-600 text-white text-xs rounded-full flex items-center justify-center font-bold">2</span>
             </button>
 
             {/* User Menu */}
@@ -143,7 +143,7 @@ export default function Header() {
               {isAuthenticated ? (
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center space-x-2 p-3 bg-gray-900/90 backdrop-blur-xl rounded-xl border border-gray-800 hover:bg-black transition-all duration-300"
+                  className="flex items-center space-x-2 p-3 bg-gray-600/90 backdrop-blur-xl rounded-xl border border-gray-500 hover:bg-gray-700 transition-all duration-300"
                 >
                   <UserCircleIcon className="w-5 h-5 text-white" />
                   <span className="hidden md:block text-white font-medium">{user?.name?.split(' ')[0] || 'User'}</span>
@@ -160,7 +160,7 @@ export default function Header() {
                   </Link>
                   <Link
                     href="/register"
-                    className="flex items-center space-x-2 px-4 py-3 bg-gray-900/90 backdrop-blur-xl rounded-xl border border-gray-800 hover:bg-black transition-all duration-300"
+                    className="flex items-center space-x-2 px-4 py-3 bg-gray-600/90 backdrop-blur-xl rounded-xl border border-gray-500 hover:bg-gray-700 transition-all duration-300"
                   >
                     <UserPlusIcon className="w-5 h-5 text-white" />
                     <span className="hidden md:block text-white font-medium">Sign Up</span>
@@ -197,12 +197,12 @@ export default function Header() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search for services..."
+                  placeholder="Search for services near you"
                   className="flex-1 px-4 py-3 bg-transparent border-0 outline-none text-gray-900 placeholder-gray-500"
                 />
                 <button
                   type="submit"
-                  className="bg-gray-900 text-white px-6 py-3 rounded-r-xl font-medium"
+                  className="bg-gray-600 text-white px-6 py-3 rounded-r-xl font-medium hover:bg-gray-700"
                 >
                   Search
                 </button>
@@ -239,7 +239,7 @@ export default function Header() {
                 </Link>
                 <Link
                   href="/register"
-                  className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-gray-900/90 backdrop-blur-xl rounded-xl border border-gray-800"
+                  className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-gray-600/90 backdrop-blur-xl rounded-xl border border-gray-500"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <UserPlusIcon className="w-5 h-5 text-white" />
