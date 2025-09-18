@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import {
@@ -99,15 +98,11 @@ export default function Header() {
           
           {/* Left: Logo */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center">
-              <Image
-                src="https://ipyoocasncbxgczhaftj.supabase.co/storage/v1/object/public/100service/100servicelogo.png"
-                alt="100Service"
-                width={140}
-                height={40}
-                className="h-10 w-auto"
-                priority
-              />
+            <Link href="/" className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">1</span>
+              </div>
+              <span className="text-xl font-bold text-black">100Service</span>
             </Link>
           </div>
 
