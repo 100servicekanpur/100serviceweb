@@ -4,17 +4,15 @@ import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
+import { SignInButton, SignUpButton, UserButton, SignedIn, SignedOut } from '@clerk/nextjs'
 import {
   MagnifyingGlassIcon,
   XMarkIcon,
-  UserCircleIcon,
   MapPinIcon,
   ShoppingCartIcon
 } from '@heroicons/react/24/outline'
 
 export default function Header() {
-  const { isAuthenticated, logout } = useAuth()
   const router = useRouter()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -292,23 +290,24 @@ export default function Header() {
               </span>
             </button>
 
-            {/* Login Icon */}
-            {isAuthenticated ? (
-              <button
-                onClick={logout}
-                className="p-2.5 rounded-full hover:bg-gray-100 hover:shadow-sm transition-all duration-200"
-                title="Logout"
-              >
-                <UserCircleIcon className="w-6 h-6 text-gray-700" />
-              </button>
-            ) : (
-              <Link
-                href="/login"
-                className="p-2.5 rounded-full hover:bg-gray-100 hover:shadow-sm transition-all duration-200"
-              >
-                <UserCircleIcon className="w-6 h-6 text-gray-700" />
-              </Link>
-            )}
+            {/* Authentication */}
+            <SignedOut>
+              <SignInButton mode="modal">
+                <button className="p-2.5 rounded-full hover:bg-gray-100 hover:shadow-sm transition-all duration-200 text-sm font-medium text-gray-700">
+                  Sign In
+                </button>
+              </SignInButton>
+            </SignedOut>
+            <SignedIn>
+              <UserButton 
+                afterSignOutUrl="/"
+                appearance={{
+                  elements: {
+                    avatarBox: "w-8 h-8",
+                  },
+                }}
+              />
+            </SignedIn>
 
           </div>
         </div>
