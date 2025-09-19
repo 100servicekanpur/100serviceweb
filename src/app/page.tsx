@@ -9,36 +9,10 @@ import {
   StarIcon,
   ClockIcon,
   CheckBadgeIcon,
-  ArrowRightIcon,
-  WrenchScrewdriverIcon,
-  BoltIcon,
-  ShieldCheckIcon,
-  ScissorsIcon,
-  ComputerDesktopIcon
+  ShieldCheckIcon
 } from '@heroicons/react/24/outline'
 
 export default function Home() {
-  const featuredServices = [
-    {
-      id: 1,
-      name: "Electrical Services",
-      description: "Professional electricians for repairs & installations",
-      icon: BoltIcon,
-      startingPrice: 299,
-      rating: 4.8,
-      reviews: 1250
-    },
-    {
-      id: 2, 
-      name: "Plumbing Services",
-      description: "Expert plumbers for leaks & installations",
-      icon: WrenchScrewdriverIcon,
-      startingPrice: 199,
-      rating: 4.9,
-      reviews: 980
-    }
-  ]
-
   return (
     <div className="min-h-screen bg-white">
       <Header />

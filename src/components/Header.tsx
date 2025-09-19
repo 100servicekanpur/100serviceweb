@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { SignInButton, SignUpButton, UserButton, SignedIn, SignedOut } from '@clerk/nextjs'
+import { SignInButton, UserButton, SignedIn, SignedOut } from '@clerk/nextjs'
 import {
   MagnifyingGlassIcon,
   XMarkIcon,

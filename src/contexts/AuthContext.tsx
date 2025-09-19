@@ -39,12 +39,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     role: 'admin' // For demo purposes - in production, get from Clerk metadata
   } : null
 
-  const login = async (_email: string, _password: string) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const login = async (email: string, password: string) => {
     router.push('/sign-in')
     return { success: false, error: 'Please use the sign-in page' }
   }
 
-  const register = async (_email: string, _password: string, _name: string, _phone?: string) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const register = async (email: string, password: string, name: string, phone?: string) => {
     router.push('/sign-up')
     return { success: false, error: 'Please use the sign-up page' }
   }
