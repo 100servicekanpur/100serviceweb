@@ -30,6 +30,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { signOut } = useClerk()
   const router = useRouter()
 
+  // Check if Clerk is properly configured
+  if (typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+    console.warn('Clerk publishable key is missing. Please check your environment variables.')
+  }
+
   const compatUser = clerkUser ? {
     id: clerkUser.id,
     email: clerkUser.emailAddresses[0]?.emailAddress || '',
