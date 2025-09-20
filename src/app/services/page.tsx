@@ -411,7 +411,7 @@ export default function ServicesPage() {
                         <span className="text-sm text-gray-600 ml-1">onwards</span>
                       </div>
                       <Link
-                        href={`/services/${service.id}`}
+                        href={`/book/${service.id}`}
                         className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition duration-200 flex items-center"
                       >
                         Book Now

@@ -5,8 +5,8 @@ export const runtime = 'nodejs'
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
 import AdminLayout from '@/components/admin/AdminLayout'
+import RoleProtected from '@/components/admin/RoleProtected'
 import {
   UserGroupIcon,
   CogIcon,
@@ -27,7 +27,6 @@ interface DashboardStats {
 }
 
 export default function AdminDashboard() {
-  const { user, isAuthenticated } = useAuth()
   const router = useRouter()
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
@@ -40,19 +39,8 @@ export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/admin/login')
-      return
-    }
-
-    // Check if user is admin
-    if (user?.role !== 'admin') {
-      router.push('/')
-      return
-    }
-
     fetchDashboardStats()
-  }, [isAuthenticated, user, router])
+  }, [])
 
   const fetchDashboardStats = async () => {
     try {
@@ -108,16 +96,13 @@ export default function AdminDashboard() {
     }
   }
 
-  if (!isAuthenticated || user?.role !== 'admin') {
-    return <div>Loading...</div>
-  }
-
   return (
-    <AdminLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+    <RoleProtected requiredRole="admin">
+      <AdminLayout>
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
           <p className="text-gray-600 mt-2">Welcome back! Here&apos;s what&apos;s happening with 100Service today.</p>
         </div>
 
@@ -285,5 +270,6 @@ export default function AdminDashboard() {
         </div>
       </div>
     </AdminLayout>
+    </RoleProtected>
   )
 }

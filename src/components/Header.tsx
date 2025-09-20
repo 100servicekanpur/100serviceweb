@@ -5,15 +5,20 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { SignInButton, UserButton, SignedIn, SignedOut } from '@clerk/nextjs'
+import { useAuth } from '@/contexts/AuthContext'
 import {
   MagnifyingGlassIcon,
   XMarkIcon,
   MapPinIcon,
-  ShoppingCartIcon
+  ShoppingCartIcon,
+  CogIcon,
+  UsersIcon,
+  ChartBarIcon
 } from '@heroicons/react/24/outline'
 
 export default function Header() {
   const router = useRouter()
+  const { isAdmin, isProvider } = useAuth()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [isScrolled, setIsScrolled] = useState(false)
@@ -24,6 +29,7 @@ export default function Header() {
   const [isTyping, setIsTyping] = useState(true)
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false)
   const [manualLocation, setManualLocation] = useState('')
+  const [showRoleMenu, setShowRoleMenu] = useState(false)
 
   // Service types for animated placeholder
   const serviceTypes = useMemo(() => [
@@ -45,6 +51,21 @@ export default function Header() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // Close role menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element
+      if (showRoleMenu && !target.closest('.relative')) {
+        setShowRoleMenu(false)
+      }
+    }
+    
+    if (showRoleMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showRoleMenu])
 
   // Get user location automatically
   useEffect(() => {
@@ -299,6 +320,91 @@ export default function Header() {
               </SignInButton>
             </SignedOut>
             <SignedIn>
+              {/* Role-based Dashboard Access */}
+              {(isAdmin || isProvider) && (
+                <div className="relative">
+                  <button
+                    onClick={() => setShowRoleMenu(!showRoleMenu)}
+                    className="p-2.5 rounded-full hover:bg-gray-100 hover:shadow-sm transition-all duration-200 text-sm font-medium text-gray-700 flex items-center space-x-1"
+                  >
+                    <CogIcon className="h-4 w-4" />
+                    <span className="hidden sm:inline">Dashboard</span>
+                  </button>
+                  
+                  {showRoleMenu && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                      {isAdmin && (
+                        <>
+                          <Link
+                            href="/admin/dashboard"
+                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                            onClick={() => setShowRoleMenu(false)}
+                          >
+                            <ChartBarIcon className="h-4 w-4 mr-2" />
+                            Admin Dashboard
+                          </Link>
+                          <Link
+                            href="/admin/users"
+                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                            onClick={() => setShowRoleMenu(false)}
+                          >
+                            <UsersIcon className="h-4 w-4 mr-2" />
+                            Manage Users
+                          </Link>
+                          <Link
+                            href="/admin/services"
+                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                            onClick={() => setShowRoleMenu(false)}
+                          >
+                            <CogIcon className="h-4 w-4 mr-2" />
+                            Manage Services
+                          </Link>
+                          <Link
+                            href="/admin/bookings"
+                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                            onClick={() => setShowRoleMenu(false)}
+                          >
+                            <ChartBarIcon className="h-4 w-4 mr-2" />
+                            View Bookings
+                          </Link>
+                        </>
+                      )}
+                      {isProvider && (
+                        <Link
+                          href="/provider/dashboard"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                          onClick={() => setShowRoleMenu(false)}
+                        >
+                          <ChartBarIcon className="h-4 w-4 mr-2" />
+                          Provider Dashboard
+                        </Link>
+                      )}
+                      <Link
+                        href="/dashboard"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        onClick={() => setShowRoleMenu(false)}
+                      >
+                        <UsersIcon className="h-4 w-4 mr-2" />
+                        My Dashboard
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Regular User Dashboard Link - Show for all signed-in users who aren't admin/provider */}
+              <SignedIn>
+                {!isAdmin && !isProvider && (
+                  <Link
+                    href="/dashboard"
+                    className="p-2.5 rounded-full hover:bg-gray-100 hover:shadow-sm transition-all duration-200 text-sm font-medium text-gray-700 flex items-center space-x-1"
+                  >
+                    <CogIcon className="h-4 w-4" />
+                    <span className="hidden sm:inline">My Dashboard</span>
+                  </Link>
+                )}
+              </SignedIn>
+              
               <UserButton 
                 afterSignOutUrl="/"
                 appearance={{

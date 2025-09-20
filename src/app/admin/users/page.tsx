@@ -20,28 +20,54 @@ interface User {
   phone?: string
   role: 'customer' | 'provider' | 'admin'
   is_verified: boolean
-  created_at: string
+  provider_status?: 'pending' | 'approved' | 'rejected' | 'suspended'
+  skills?: string[]
+  experience_years?: number
+  hourly_rate?: number
+  bio?: string
   city?: string
   state?: string
+  created_at: string
+}
+
+interface Service {
+  id: string
+  name: string
+  category: string
+}
+
+interface ProviderService {
+  id: string
+  provider_id: string
+  service_id: string
+  service?: Service
 }
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([])
   const [filteredUsers, setFilteredUsers] = useState<User[]>([])
+  const [services, setServices] = useState<Service[]>([])
+  const [providerServices, setProviderServices] = useState<ProviderService[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedRole, setSelectedRole] = useState<string>('all')
+  const [selectedProviderStatus, setSelectedProviderStatus] = useState<string>('all')
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showProviderModal, setShowProviderModal] = useState(false)
+  const [showServiceAssignModal, setShowServiceAssignModal] = useState(false)
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([])
 
   useEffect(() => {
     fetchUsers()
+    fetchServices()
+    fetchProviderServices()
   }, [])
 
   useEffect(() => {
     filterUsers()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [users, searchQuery, selectedRole])
+  }, [users, searchQuery, selectedRole, selectedProviderStatus])
 
   const fetchUsers = async () => {
     try {
@@ -60,6 +86,42 @@ export default function AdminUsersPage() {
     }
   }
 
+  const fetchServices = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('services')
+        .select('id, name, category')
+        .order('name')
+
+      if (error) throw error
+      setServices(data || [])
+    } catch (error) {
+      console.error('Error fetching services:', error)
+    }
+  }
+
+  const fetchProviderServices = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('provider_services')
+        .select(`
+          id,
+          provider_id,
+          service_id,
+          services:service_id (
+            id,
+            name,
+            category
+          )
+        `)
+
+      if (error) throw error
+      setProviderServices(data || [])
+    } catch (error) {
+      console.error('Error fetching provider services:', error)
+    }
+  }
+
   const filterUsers = () => {
     let filtered = users
 
@@ -75,6 +137,11 @@ export default function AdminUsersPage() {
     // Filter by role
     if (selectedRole !== 'all') {
       filtered = filtered.filter(user => user.role === selectedRole)
+    }
+
+    // Filter by provider status (only for providers)
+    if (selectedProviderStatus !== 'all' && selectedRole === 'provider') {
+      filtered = filtered.filter(user => user.provider_status === selectedProviderStatus)
     }
 
     setFilteredUsers(filtered)
@@ -136,11 +203,83 @@ export default function AdminUsersPage() {
     }
   }
 
+  const handleUpdateProviderStatus = async (userId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ provider_status: newStatus })
+        .eq('id', userId)
+
+      if (error) throw error
+
+      // Update local state
+      setUsers(users.map(user => 
+        user.id === userId ? { ...user, provider_status: newStatus as 'pending' | 'approved' | 'rejected' | 'suspended' } : user
+      ))
+    } catch (error) {
+      console.error('Error updating provider status:', error)
+    }
+  }
+
+  const getProviderServices = (providerId: string) => {
+    return providerServices.filter(ps => ps.provider_id === providerId)
+  }
+
+  const handleAssignServices = async () => {
+    if (!selectedUser) return
+
+    try {
+      // First, remove all existing services for this provider
+      await supabase
+        .from('provider_services')
+        .delete()
+        .eq('provider_id', selectedUser.id)
+
+      // Then add the selected services
+      if (selectedServiceIds.length > 0) {
+        const newAssignments = selectedServiceIds.map(serviceId => ({
+          provider_id: selectedUser.id,
+          service_id: serviceId
+        }))
+
+        const { error } = await supabase
+          .from('provider_services')
+          .insert(newAssignments)
+
+        if (error) throw error
+      }
+
+      // Refresh provider services
+      await fetchProviderServices()
+      setShowServiceAssignModal(false)
+      setSelectedServiceIds([])
+    } catch (error) {
+      console.error('Error assigning services:', error)
+    }
+  }
+
+  const openServiceAssignModal = (user: User) => {
+    setSelectedUser(user)
+    const currentServices = getProviderServices(user.id).map(ps => ps.service_id)
+    setSelectedServiceIds(currentServices)
+    setShowServiceAssignModal(true)
+  }
+
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case 'admin': return 'bg-red-100 text-red-800'
       case 'provider': return 'bg-blue-100 text-blue-800'
       case 'customer': return 'bg-green-100 text-green-800'
+      default: return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const getProviderStatusBadgeColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800'
+      case 'approved': return 'bg-green-100 text-green-800'
+      case 'rejected': return 'bg-red-100 text-red-800'
+      case 'suspended': return 'bg-gray-100 text-gray-800'
       default: return 'bg-gray-100 text-gray-800'
     }
   }
@@ -193,6 +332,23 @@ export default function AdminUsersPage() {
                   <option value="admin">Administrators</option>
                 </select>
               </div>
+
+              {/* Provider Status Filter (only show when providers are selected) */}
+              {selectedRole === 'provider' && (
+                <div className="md:w-48">
+                  <select
+                    value={selectedProviderStatus}
+                    onChange={(e) => setSelectedProviderStatus(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="suspended">Suspended</option>
+                  </select>
+                </div>
+              )}
             </div>
           </div>
 
@@ -205,6 +361,12 @@ export default function AdminUsersPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    {selectedRole === 'provider' && (
+                      <>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Provider Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Services</th>
+                      </>
+                    )}
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -213,13 +375,13 @@ export default function AdminUsersPage() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {isLoading ? (
                     <tr>
-                      <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                      <td colSpan={selectedRole === 'provider' ? 8 : 6} className="px-6 py-4 text-center text-gray-500">
                         Loading users...
                       </td>
                     </tr>
                   ) : filteredUsers.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                      <td colSpan={selectedRole === 'provider' ? 8 : 6} className="px-6 py-4 text-center text-gray-500">
                         No users found
                       </td>
                     </tr>
@@ -261,6 +423,33 @@ export default function AdminUsersPage() {
                             {user.is_verified ? 'Verified' : 'Unverified'}
                           </button>
                         </td>
+                        {selectedRole === 'provider' && (
+                          <>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <select
+                                value={user.provider_status || 'pending'}
+                                onChange={(e) => handleUpdateProviderStatus(user.id, e.target.value)}
+                                className={`px-3 py-1 rounded-full text-xs font-medium ${getProviderStatusBadgeColor(user.provider_status || 'pending')} border-0 focus:ring-2 focus:ring-gray-500`}
+                              >
+                                <option value="pending">Pending</option>
+                                <option value="approved">Approved</option>
+                                <option value="rejected">Rejected</option>
+                                <option value="suspended">Suspended</option>
+                              </select>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">
+                                {getProviderServices(user.id).length} services
+                              </div>
+                              <button
+                                onClick={() => openServiceAssignModal(user)}
+                                className="text-xs text-blue-600 hover:text-blue-900"
+                              >
+                                Manage Services
+                              </button>
+                            </td>
+                          </>
+                        )}
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {user.city ? `${user.city}, ${user.state}` : 'N/A'}
                         </td>
@@ -268,6 +457,17 @@ export default function AdminUsersPage() {
                           {new Date(user.created_at).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                          {user.role === 'provider' && (
+                            <button
+                              onClick={() => {
+                                setSelectedUser(user)
+                                setShowProviderModal(true)
+                              }}
+                              className="text-blue-600 hover:text-blue-900 mr-2"
+                            >
+                              View Details
+                            </button>
+                          )}
                           <button
                             onClick={() => {
                               setSelectedUser(user)
@@ -306,6 +506,112 @@ export default function AdminUsersPage() {
             </div>
           </div>
         </div>
+
+        {/* Provider Details Modal */}
+        {showProviderModal && selectedUser && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Provider Details</h3>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium text-gray-900">Basic Information</h4>
+                  <p className="text-sm text-gray-600">Name: {selectedUser.full_name}</p>
+                  <p className="text-sm text-gray-600">Email: {selectedUser.email}</p>
+                  <p className="text-sm text-gray-600">Phone: {selectedUser.phone || 'N/A'}</p>
+                  <p className="text-sm text-gray-600">Location: {selectedUser.city ? `${selectedUser.city}, ${selectedUser.state}` : 'N/A'}</p>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium text-gray-900">Provider Information</h4>
+                  <p className="text-sm text-gray-600">Status: {selectedUser.provider_status || 'pending'}</p>
+                  <p className="text-sm text-gray-600">Experience: {selectedUser.experience_years || 'N/A'} years</p>
+                  <p className="text-sm text-gray-600">Hourly Rate: ₹{selectedUser.hourly_rate || 'N/A'}</p>
+                  <p className="text-sm text-gray-600">Bio: {selectedUser.bio || 'No bio provided'}</p>
+                </div>
+
+                <div>
+                  <h4 className="font-medium text-gray-900">Assigned Services</h4>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {getProviderServices(selectedUser.id).map((ps) => (
+                      <span key={ps.id} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
+                        {ps.service?.name || 'Unknown Service'}
+                      </span>
+                    ))}
+                    {getProviderServices(selectedUser.id).length === 0 && (
+                      <span className="text-gray-500 text-sm">No services assigned</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={() => setShowProviderModal(false)}
+                  className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Service Assignment Modal */}
+        {showServiceAssignModal && selectedUser && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Assign Services to {selectedUser.full_name}
+              </h3>
+              
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600">
+                  Select the services this provider can offer:
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                  {services.map((service) => (
+                    <label key={service.id} className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+                      <input
+                        type="checkbox"
+                        checked={selectedServiceIds.includes(service.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedServiceIds([...selectedServiceIds, service.id])
+                          } else {
+                            setSelectedServiceIds(selectedServiceIds.filter(id => id !== service.id))
+                          }
+                        }}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">{service.name}</div>
+                        <div className="text-xs text-gray-500">{service.category}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-4 mt-6">
+                <button
+                  onClick={() => {
+                    setShowServiceAssignModal(false)
+                    setSelectedServiceIds([])
+                  }}
+                  className="px-4 py-2 text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAssignServices}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  Save Services
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Delete Modal */}
         {showDeleteModal && selectedUser && (
