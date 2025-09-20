@@ -43,47 +43,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Fetch user data from Supabase when Clerk user changes
   useEffect(() => {
-  const fetchSupabaseUser = async (clerkUser: any) => {
-    try {
-      console.log('Fetching Supabase user for Clerk ID:', clerkUser.id)
-      
-      // Look up by Clerk ID first
-      let { data: user, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', clerkUser.id)
-        .single()
-
-      if (error && error.code === 'PGRST116') {
-        // User doesn't exist, create them
-        console.log('User not found, creating new user')
-        await createSupabaseUser()
+    const fetchSupabaseUser = async (clerkUser: any) => {
+      try {
+        console.log('Fetching Supabase user for Clerk ID:', clerkUser.id)
         
-        // Try to fetch again
-        const { data: newUser, error: fetchError } = await supabase
+        // Look up by Clerk ID first
+        let { data: user, error } = await supabase
           .from('users')
           .select('*')
           .eq('id', clerkUser.id)
           .single()
 
-        if (fetchError) {
-          console.error('Error fetching newly created user:', fetchError)
+        if (error && error.code === 'PGRST116') {
+          // User doesn't exist, create them
+          console.log('User not found, creating new user')
+          await createSupabaseUser()
+          
+          // Try to fetch again
+          const { data: newUser, error: fetchError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', clerkUser.id)
+            .single()
+
+          if (fetchError) {
+            console.error('Error fetching newly created user:', fetchError)
+            return null
+          }
+          
+          user = newUser
+        } else if (error) {
+          console.error('Error fetching user:', error)
           return null
         }
-        
-        user = newUser
-      } else if (error) {
-        console.error('Error fetching user:', error)
+
+        console.log('Supabase user found:', user)
+        return user
+      } catch (err) {
+        console.error('Error in fetchSupabaseUser:', err)
         return null
       }
-
-      console.log('Supabase user found:', user)
-      return user
-    } catch (error) {
-      console.error('Error in fetchSupabaseUser:', error)
-      return null
     }
-  }
 
   const createSupabaseUser = async () => {
       if (!clerkUser) return
@@ -130,8 +130,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             role: newUser.role
           })
         }
-      } catch (error) {
-        console.error('Error in createSupabaseUser:', error)
+      } catch (err) {
+        console.error('Error in createSupabaseUser:', err)
       }
     }
 
