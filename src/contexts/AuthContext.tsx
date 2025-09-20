@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const fetchSupabaseUser = async (clerkUser: any) => {
       try {
-        console.log('Fetching Supabase user for Clerk ID:', clerkUser.id)
+        console.log('🔍 Fetching Supabase user for Clerk ID:', clerkUser.id)
         
         // Look up by Clerk ID first
         let { data: user, error } = await supabase
@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (error && error.code === 'PGRST116') {
           // User doesn't exist, create them
-          console.log('User not found, creating new user')
+          console.log('👤 User not found, creating new user')
           await createSupabaseUser()
           
           // Try to fetch again
@@ -67,20 +67,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .single()
 
           if (fetchError) {
-            console.error('Error fetching newly created user:', fetchError)
+            console.error('❌ Error fetching newly created user:', fetchError)
+            setSupabaseUser(null)
             return null
           }
           
           user = newUser
         } else if (error) {
-          console.error('Error fetching user:', error)
+          console.error('❌ Error fetching user:', error)
+          setSupabaseUser(null)
           return null
         }
 
-        console.log('Supabase user found:', user)
+        console.log('✅ Supabase user found:', user)
+        // THIS WAS MISSING - SET THE STATE!
+        setSupabaseUser(user)
         return user
       } catch (err) {
-        console.error('Error in fetchSupabaseUser:', err)
+        console.error('💥 Error in fetchSupabaseUser:', err)
+        setSupabaseUser(null)
         return null
       }
     }
@@ -108,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .single()
 
         if (error) {
-          console.error('Error creating user in Supabase:', error)
+          console.error('❌ Error creating user in Supabase:', error)
           console.error('Error details:', {
             code: error.code,
             message: error.message,
@@ -117,21 +122,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           })
           if (error.code === '42P01') {
             console.error('🚨 DATABASE NOT SET UP: users table does not exist!')
-            console.error('Please run the supabase-complete-setup.sql script in your Supabase dashboard')
+            console.error('Please run the clerk-supabase-setup.sql script in your Supabase dashboard')
           }
         } else {
-          console.log('User created successfully:', newUser)
-          setSupabaseUser({
-            id: newUser.id,
-            email: newUser.email,
-            name: newUser.full_name || newUser.name || '',
-            full_name: newUser.full_name || newUser.name || '',
-            phone: newUser.phone || '',
-            role: newUser.role
-          })
+          console.log('✅ User created successfully:', newUser)
+          // Don't set state here - fetchSupabaseUser will handle it
         }
       } catch (err) {
-        console.error('Error in createSupabaseUser:', err)
+        console.error('💥 Error in createSupabaseUser:', err)
       }
     }
 
