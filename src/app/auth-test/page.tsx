@@ -31,11 +31,15 @@ export default function AuthTestPage() {
     usersCount: number
     categoriesCount: number
     error: string
+    userCreationAttempt: string
+    userLookupResult: string
   }>({
     tables: [],
     usersCount: 0,
     categoriesCount: 0,
-    error: ''
+    error: '',
+    userCreationAttempt: '',
+    userLookupResult: ''
   })
 
   useEffect(() => {
@@ -49,7 +53,12 @@ export default function AuthTestPage() {
 
     // Test database connection
     testDatabaseConnection()
-  }, [])
+    
+    // Test user lookup if Clerk is loaded
+    if (clerkLoaded && clerkUser) {
+      testUserLookup()
+    }
+  }, [clerkLoaded, clerkUser])
 
   const testDatabaseConnection = async () => {
     try {
@@ -78,10 +87,90 @@ export default function AuthTestPage() {
         tables: ['users', 'categories', 'services'], // We know these exist if query worked
         usersCount: usersCount || 0,
         categoriesCount: categoriesCount || 0,
-        error: ''
+        error: '',
+        userCreationAttempt: '',
+        userLookupResult: ''
       })
     } catch (err) {
-      setDbCheck(prev => ({ ...prev, error: err instanceof Error ? err.message : 'Unknown error' }))
+      setDbCheck(prev => ({ 
+        ...prev, 
+        error: err instanceof Error ? err.message : 'Unknown error',
+        userCreationAttempt: '',
+        userLookupResult: ''
+      }))
+    }
+  }
+
+  // Test user creation and lookup
+  const testUserLookup = async () => {
+    if (!clerkUser) return
+
+    try {
+      console.log('🔍 Testing user lookup for Clerk ID:', clerkUser.id)
+      
+      // First, check if user exists
+      const { data: existingUser, error: lookupError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', clerkUser.id)
+        .single()
+
+      if (lookupError && lookupError.code === 'PGRST116') {
+        console.log('👤 User not found, attempting to create...')
+        
+        // Try to create user
+        const userData = {
+          id: clerkUser.id,
+          email: clerkUser.emailAddresses[0]?.emailAddress || '',
+          full_name: clerkUser.fullName || '',
+          phone: clerkUser.phoneNumbers[0]?.phoneNumber || '',
+          role: clerkUser.emailAddresses[0]?.emailAddress === 'v9ibhav@gmail.com' ? 'admin' : 'customer',
+          is_verified: true
+        }
+
+        const { data: newUser, error: createError } = await supabase
+          .from('users')
+          .insert([userData])
+          .select()
+          .single()
+
+        if (createError) {
+          console.error('❌ User creation failed:', createError)
+          setDbCheck(prev => ({
+            ...prev,
+            userCreationAttempt: `FAILED: ${createError.message}`,
+            userLookupResult: 'User creation failed'
+          }))
+        } else {
+          console.log('✅ User created successfully:', newUser)
+          setDbCheck(prev => ({
+            ...prev,
+            userCreationAttempt: 'SUCCESS: User created',
+            userLookupResult: `Found user with role: ${newUser.role}`
+          }))
+        }
+      } else if (lookupError) {
+        console.error('❌ User lookup failed:', lookupError)
+        setDbCheck(prev => ({
+          ...prev,
+          userCreationAttempt: 'SKIPPED: Lookup failed',
+          userLookupResult: `FAILED: ${lookupError.message}`
+        }))
+      } else {
+        console.log('✅ User found:', existingUser)
+        setDbCheck(prev => ({
+          ...prev,
+          userCreationAttempt: 'SKIPPED: User exists',
+          userLookupResult: `Found user with role: ${existingUser.role}`
+        }))
+      }
+    } catch (err) {
+      console.error('❌ Test failed:', err)
+      setDbCheck(prev => ({
+        ...prev,
+        userCreationAttempt: 'ERROR: Exception thrown',
+        userLookupResult: err instanceof Error ? err.message : 'Unknown error'
+      }))
     }
   }
 
@@ -211,6 +300,29 @@ export default function AuthTestPage() {
                   <br />• Database tables don&apos;t exist (run the SQL setup script)
                   <br />• User creation failed (check browser console for errors)
                 </p>
+              </div>
+            )}
+            
+            {/* Debug Information */}
+            {(dbCheck.userCreationAttempt || dbCheck.userLookupResult) && (
+              <div className="bg-blue-50 border border-blue-200 p-4 rounded mt-4">
+                <p className="text-blue-800 font-semibold">🔍 Debug Information</p>
+                {dbCheck.userCreationAttempt && (
+                  <p className="text-blue-700 text-sm mt-1">
+                    <strong>User Creation:</strong> {dbCheck.userCreationAttempt}
+                  </p>
+                )}
+                {dbCheck.userLookupResult && (
+                  <p className="text-blue-700 text-sm mt-1">
+                    <strong>User Lookup:</strong> {dbCheck.userLookupResult}
+                  </p>
+                )}
+                <button 
+                  onClick={testUserLookup}
+                  className="mt-2 bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
+                >
+                  🔄 Retry User Lookup
+                </button>
               </div>
             )}
           </div>
