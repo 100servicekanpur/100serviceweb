@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import { supabase } from '@/lib/supabase'
 import {
   MagnifyingGlassIcon,
   FunnelIcon,
@@ -14,25 +15,28 @@ import {
 import { StarIcon as StarSolidIcon, HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid'
 
 interface Service {
-  id: number
-  name: string
+  id: string
+  title: string
   description: string
-  image: string
-  rating: number
-  reviews: number
-  startingPrice: number
-  category: string
-  provider: string
-  availability: string
-  responseTime: string
-  badges: string[]
-  features: string[]
+  short_description?: string
+  base_price: number
+  rating_average: number
+  rating_count: number
+  booking_count: number
+  categories?: {
+    name: string
+  }
+  users?: {
+    full_name: string
+  }
 }
 
 interface Category {
   id: string
   name: string
-  count: number
+  slug: string
+  is_active: boolean
+  sort_order: number
 }
 
 export default function ServicesPage() {
@@ -42,110 +46,92 @@ export default function ServicesPage() {
   const [sortBy, setSortBy] = useState('popular')
   const [priceRange, setPriceRange] = useState([0, 5000])
   const [isFilterOpen, setIsFilterOpen] = useState(false)
-  const [favorites, setFavorites] = useState(new Set<number>())
+  const [favorites, setFavorites] = useState(new Set<string>())
 
   // Mock data - in real app this would come from Supabase
   const mockServices: Service[] = useMemo(() => [
     {
-      id: 1,
-      name: "Electrical Repair & Installation",
+      id: "1",
+      title: "Electrical Repair & Installation",
       description: "Professional electrical services including repairs, installations, and emergency support",
-      image: "/api/placeholder/400/300",
-      rating: 4.8,
-      reviews: 1250,
-      startingPrice: 299,
-      category: "electrical",
-      provider: "PowerTech Solutions",
-      availability: "24/7",
-      responseTime: "Within 2 hours",
-      badges: ["Verified", "Most Popular", "Emergency Available"],
-      features: ["Free Inspection", "1 Year Warranty", "Licensed Electricians", "Emergency Service"]
+      short_description: "Professional electrical services",
+      base_price: 299,
+      rating_average: 4.8,
+      rating_count: 1250,
+      booking_count: 85,
+      categories: { name: "Electrical" },
+      users: { full_name: "PowerTech Solutions" }
     },
     {
-      id: 2,
-      name: "Professional Plumbing Services",
+      id: "2",
+      title: "Professional Plumbing Services",
       description: "Complete plumbing solutions from leaky faucets to full bathroom renovations",
-      image: "/api/placeholder/400/300",
-      rating: 4.9,
-      reviews: 980,
-      startingPrice: 199,
-      category: "plumbing",
-      provider: "AquaFix Pro",
-      availability: "6 AM - 10 PM",
-      responseTime: "Within 1 hour",
-      badges: ["Verified", "Top Rated"],
-      features: ["Free Estimate", "Quality Guarantee", "Licensed Plumbers", "Same Day Service"]
+      short_description: "Complete plumbing solutions",
+      base_price: 199,
+      rating_average: 4.9,
+      rating_count: 980,
+      booking_count: 120,
+      categories: { name: "Plumbing" },
+      users: { full_name: "AquaFix Pro" }
     },
     {
-      id: 3,
-      name: "Deep Cleaning Services",
+      id: "3",
+      title: "Deep Cleaning Services",
       description: "Comprehensive home cleaning with eco-friendly products and trained professionals",
-      image: "/api/placeholder/400/300",
-      rating: 4.7,
-      reviews: 2100,
-      startingPrice: 149,
-      category: "cleaning",
-      provider: "CleanMasters",
-      availability: "7 AM - 8 PM",
-      responseTime: "Within 4 hours",
-      badges: ["Verified", "Eco-Friendly"],
-      features: ["Eco Products", "Insured Staff", "Flexible Timing", "Satisfaction Guarantee"]
+      short_description: "Comprehensive home cleaning",
+      base_price: 149,
+      rating_average: 4.7,
+      rating_count: 2100,
+      booking_count: 200,
+      categories: { name: "Cleaning" },
+      users: { full_name: "CleanMasters" }
     },
     {
-      id: 4,
-      name: "Home Painting Services",
-      description: "Interior and exterior painting with premium quality paints and expert painters",
-      image: "/api/placeholder/400/300",
-      rating: 4.6,
-      reviews: 850,
-      startingPrice: 899,
-      category: "painting",
-      provider: "ColorCraft Painters",
-      availability: "9 AM - 6 PM",
-      responseTime: "Next Day",
-      badges: ["Verified", "Premium Quality"],
-      features: ["Premium Paints", "Color Consultation", "Wall Preparation", "Clean-up Included"]
+      id: "4",
+      title: "Home Painting Services",
+      description: "Professional interior and exterior painting with premium materials and expert craftsmanship",
+      short_description: "Professional painting services",
+      base_price: 899,
+      rating_average: 4.6,
+      rating_count: 750,
+      booking_count: 65,
+      categories: { name: "Painting" },
+      users: { full_name: "ColorCraft Painters" }
     },
     {
-      id: 5,
-      name: "Carpentry & Furniture Repair",
-      description: "Custom carpentry work and furniture repair by skilled craftsmen",
-      image: "/api/placeholder/400/300",
-      rating: 4.8,
-      reviews: 650,
-      startingPrice: 399,
-      category: "carpentry",
-      provider: "WoodWorks Pro",
-      availability: "8 AM - 7 PM",
-      responseTime: "Within 6 hours",
-      badges: ["Verified", "Custom Work"],
-      features: ["Custom Design", "Quality Wood", "Skilled Craftsmen", "Warranty Included"]
+      id: "5",
+      title: "Furniture Assembly & Carpentry",
+      description: "Expert furniture assembly and custom carpentry work for all your home needs",
+      short_description: "Expert furniture assembly",
+      base_price: 89,
+      rating_average: 4.5,
+      rating_count: 450,
+      booking_count: 95,
+      categories: { name: "Carpentry" },
+      users: { full_name: "WoodWork Experts" }
     },
     {
-      id: 6,
-      name: "Appliance Repair Services",
-      description: "Repair and maintenance for all home appliances with genuine parts",
-      image: "/api/placeholder/400/300",
-      rating: 4.5,
-      reviews: 1100,
-      startingPrice: 249,
-      category: "appliance",
-      provider: "FixIt Solutions",
-      availability: "24/7",
-      responseTime: "Within 3 hours",
-      badges: ["Verified", "Genuine Parts"],
-      features: ["Genuine Parts", "Expert Technicians", "Warranty", "Emergency Service"]
+      id: "6",
+      title: "Appliance Repair Services",
+      description: "Fast and reliable repair services for all major home appliances",
+      short_description: "Appliance repair services",
+      base_price: 129,
+      rating_average: 4.4,
+      rating_count: 650,
+      booking_count: 110,
+      categories: { name: "Appliance Repair" },
+      users: { full_name: "FixIt Appliance Pros" }
     }
   ], [])
 
-  const categories: Category[] = [
+  const categories = [
     { id: 'all', name: 'All Services', count: mockServices.length },
-    { id: 'electrical', name: 'Electrical', count: mockServices.filter(s => s.category === 'electrical').length },
-    { id: 'plumbing', name: 'Plumbing', count: mockServices.filter(s => s.category === 'plumbing').length },
-    { id: 'cleaning', name: 'Cleaning', count: mockServices.filter(s => s.category === 'cleaning').length },
-    { id: 'painting', name: 'Painting', count: mockServices.filter(s => s.category === 'painting').length },
-    { id: 'carpentry', name: 'Carpentry', count: mockServices.filter(s => s.category === 'carpentry').length },
-    { id: 'appliance', name: 'Appliance Repair', count: mockServices.filter(s => s.category === 'appliance').length }
+    { id: 'electrical', name: 'Electrical', count: mockServices.filter(s => s.categories?.name === 'Electrical').length },
+    { id: 'plumbing', name: 'Plumbing', count: mockServices.filter(s => s.categories?.name === 'Plumbing').length },
+    { id: 'cleaning', name: 'Cleaning', count: mockServices.filter(s => s.categories?.name === 'Cleaning').length },
+    { id: 'painting', name: 'Painting', count: mockServices.filter(s => s.categories?.name === 'Painting').length },
+    { id: 'carpentry', name: 'Carpentry', count: mockServices.filter(s => s.categories?.name === 'Carpentry').length },
+    { id: 'appliance', name: 'Appliance Repair', count: mockServices.filter(s => s.categories?.name === 'Appliance Repair').length }
   ]
 
   useEffect(() => {
@@ -153,44 +139,44 @@ export default function ServicesPage() {
 
     // Filter by category
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter(service => service.category === selectedCategory)
+      filtered = filtered.filter(service => service.categories?.name.toLowerCase() === selectedCategory.toLowerCase())
     }
 
     // Filter by search query
     if (searchQuery) {
       filtered = filtered.filter(service =>
-        service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        service.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         service.description.toLowerCase().includes(searchQuery.toLowerCase())
       )
     }
 
     // Filter by price range
     filtered = filtered.filter(service =>
-      service.startingPrice >= priceRange[0] && service.startingPrice <= priceRange[1]
+      service.base_price >= priceRange[0] && service.base_price <= priceRange[1]
     )
 
     // Sort services
     switch (sortBy) {
       case 'price-low':
-        filtered.sort((a, b) => a.startingPrice - b.startingPrice)
+        filtered.sort((a, b) => a.base_price - b.base_price)
         break
       case 'price-high':
-        filtered.sort((a, b) => b.startingPrice - a.startingPrice)
+        filtered.sort((a, b) => b.base_price - a.base_price)
         break
       case 'rating':
-        filtered.sort((a, b) => b.rating - a.rating)
+        filtered.sort((a, b) => b.rating_average - a.rating_average)
         break
       case 'reviews':
-        filtered.sort((a, b) => b.reviews - a.reviews)
+        filtered.sort((a, b) => b.rating_count - a.rating_count)
         break
       default: // popular
-        filtered.sort((a, b) => b.reviews - a.reviews)
+        filtered.sort((a, b) => b.booking_count - a.booking_count)
     }
 
     setFilteredServices(filtered)
   }, [selectedCategory, searchQuery, sortBy, priceRange, mockServices])
 
-  const toggleFavorite = (serviceId: number) => {
+  const toggleFavorite = (serviceId: string) => {
     const newFavorites = new Set(favorites)
     if (newFavorites.has(serviceId)) {
       newFavorites.delete(serviceId)
@@ -335,20 +321,14 @@ export default function ServicesPage() {
                   {/* Service Image */}
                   <div className="relative h-48 bg-gray-200">
                     <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-                      {service.badges.map((badge, index) => (
-                        <span
-                          key={index}
-                          className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            badge === 'Most Popular' 
-                              ? 'bg-red-100 text-red-800'
-                              : badge === 'Top Rated'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-green-100 text-green-800'
-                          }`}
-                        >
-                          {badge}
+                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                        Verified
+                      </span>
+                      {service.rating_average >= 4.5 && (
+                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+                          Top Rated
                         </span>
-                      ))}
+                      )}
                     </div>
                     <button
                       onClick={() => toggleFavorite(service.id)}
@@ -366,7 +346,7 @@ export default function ServicesPage() {
                   <div className="p-6">
                     <div className="flex items-start justify-between mb-3">
                       <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
-                        {service.name}
+                        {service.title}
                       </h3>
                     </div>
                     
@@ -378,36 +358,29 @@ export default function ServicesPage() {
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center">
                         <CheckBadgeIcon className="w-4 h-4 text-green-500 mr-1" />
-                        <span className="text-sm text-gray-600">{service.provider}</span>
+                        <span className="text-sm text-gray-600">{service.users?.full_name}</span>
                       </div>
                       <div className="flex items-center">
                         <StarSolidIcon className="w-4 h-4 text-yellow-400 mr-1" />
-                        <span className="text-sm font-medium text-gray-900">{service.rating}</span>
-                        <span className="text-sm text-gray-600 ml-1">({service.reviews})</span>
+                        <span className="text-sm font-medium text-gray-900">{service.rating_average}</span>
+                        <span className="text-sm text-gray-600 ml-1">({service.rating_count})</span>
                       </div>
                     </div>
 
                     {/* Features */}
                     <div className="flex flex-wrap gap-2 mb-4">
-                      {service.features.slice(0, 2).map((feature, index) => (
-                        <span
-                          key={index}
-                          className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
-                        >
-                          {feature}
-                        </span>
-                      ))}
-                      {service.features.length > 2 && (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
-                          +{service.features.length - 2} more
-                        </span>
-                      )}
+                      <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+                        Professional Service
+                      </span>
+                      <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+                        {service.booking_count}+ bookings
+                      </span>
                     </div>
 
                     {/* Price & CTA */}
                     <div className="flex items-center justify-between">
                       <div>
-                        <span className="text-lg font-bold text-gray-900">₹{service.startingPrice}</span>
+                        <span className="text-lg font-bold text-gray-900">₹{service.base_price}</span>
                         <span className="text-sm text-gray-600 ml-1">onwards</span>
                       </div>
                       <Link

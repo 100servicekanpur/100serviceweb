@@ -43,77 +43,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Fetch user data from Supabase when Clerk user changes
   useEffect(() => {
-    const fetchSupabaseUser = async () => {
-      if (!clerkUser?.emailAddresses[0]?.emailAddress) {
-        console.log('No Clerk user email, setting Supabase user to null')
-        setSupabaseUser(null)
-        return
-      }
-
-      const userEmail = clerkUser.emailAddresses[0].emailAddress
-      console.log('Fetching Supabase user for email:', userEmail)
+  const fetchSupabaseUser = async (clerkUser: any) => {
+    try {
+      console.log('Fetching Supabase user for Clerk ID:', clerkUser.id)
       
-      setIsLoadingSupabase(true)
-      try {
-        const { data: userData, error } = await supabase
+      // Look up by Clerk ID first
+      let { data: user, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', clerkUser.id)
+        .single()
+
+      if (error && error.code === 'PGRST116') {
+        // User doesn't exist, create them
+        console.log('User not found, creating new user')
+        await createSupabaseUser()
+        
+        // Try to fetch again
+        const { data: newUser, error: fetchError } = await supabase
           .from('users')
           .select('*')
-          .eq('email', userEmail)
+          .eq('id', clerkUser.id)
           .single()
 
-        if (error) {
-          console.error('Error fetching user data:', error)
-          console.error('Error details:', {
-            code: error.code,
-            message: error.message,
-            details: error.details,
-            hint: error.hint
-          })
-          // If user doesn't exist in Supabase, create them
-          if (error.code === 'PGRST116') {
-            console.log('User not found, creating new user...')
-            await createSupabaseUser()
-          } else if (error.code === '42P01') {
-            console.error('🚨 DATABASE NOT SET UP: users table does not exist!')
-            console.error('Please run the supabase-complete-setup.sql script in your Supabase dashboard')
-          } else {
-            console.error('Unknown database error:', error)
-          }
-        } else {
-          console.log('Supabase user found:', userData)
-          setSupabaseUser({
-            id: userData.id,
-            email: userData.email,
-            name: userData.full_name || userData.name || '',
-            full_name: userData.full_name || userData.name || '',
-            phone: userData.phone || '',
-            role: userData.role || 'user'
-          })
+        if (fetchError) {
+          console.error('Error fetching newly created user:', fetchError)
+          return null
         }
-      } catch (error) {
-        console.error('Error in fetchSupabaseUser:', error)
-      } finally {
-        setIsLoadingSupabase(false)
+        
+        user = newUser
+      } else if (error) {
+        console.error('Error fetching user:', error)
+        return null
       }
-    }
 
-    const createSupabaseUser = async () => {
+      console.log('Supabase user found:', user)
+      return user
+    } catch (error) {
+      console.error('Error in fetchSupabaseUser:', error)
+      return null
+    }
+  }
+
+  const createSupabaseUser = async () => {
       if (!clerkUser) return
 
       try {
-        // For Supabase, we'll use email as the primary identifier since Clerk IDs are strings
-        // and Supabase users table uses UUID. We'll let Supabase generate a UUID.
+        // Use Clerk user ID directly since our database now supports it
         const userData = {
-          // Don't set ID - let Supabase generate UUID automatically
+          id: clerkUser.id, // Use Clerk ID directly
           email: clerkUser.emailAddresses[0]?.emailAddress || '',
           full_name: clerkUser.fullName || '',
-          name: clerkUser.fullName || '',
           phone: clerkUser.phoneNumbers[0]?.phoneNumber || '',
-          role: clerkUser.emailAddresses[0]?.emailAddress === 'v9ibhav@gmail.com' ? 'admin' : 'user',
+          role: clerkUser.emailAddresses[0]?.emailAddress === 'v9ibhav@gmail.com' ? 'admin' : 'customer',
           is_verified: true
         }
 
-        console.log('Creating Supabase user:', userData)
+        console.log('Creating Supabase user with Clerk ID:', userData)
 
         const { data: newUser, error } = await supabase
           .from('users')
@@ -150,7 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (clerkUser && isLoaded) {
-      fetchSupabaseUser()
+      fetchSupabaseUser(clerkUser)
     } else if (!clerkUser) {
       setSupabaseUser(null)
     }
