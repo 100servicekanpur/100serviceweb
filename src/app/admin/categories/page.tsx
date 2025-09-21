@@ -200,9 +200,27 @@ export default function AdminCategoriesPage() {
 
       setShowModal(false)
       fetchCategories()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving category:', error)
-      alert('Error saving category. Please try again.')
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      })
+      
+      let errorMessage = 'Error saving category. Please try again.'
+      if (error.message) {
+        errorMessage = `Error: ${error.message}`
+      }
+      if (error.code === 'PGRST301') {
+        errorMessage = 'Permission denied. Please check your admin access.'
+      }
+      if (error.code === '42501') {
+        errorMessage = 'Database permission error. Please check RLS policies.'
+      }
+      
+      alert(errorMessage)
     } finally {
       setIsSaving(false)
     }
@@ -234,9 +252,27 @@ export default function AdminCategoriesPage() {
       if (error) throw error
 
       fetchCategories()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting category:', error)
-      alert('Error deleting category. Please try again.')
+      console.error('Delete error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      })
+      
+      let errorMessage = 'Error deleting category. Please try again.'
+      if (error.message) {
+        errorMessage = `Error: ${error.message}`
+      }
+      if (error.code === 'PGRST301') {
+        errorMessage = 'Permission denied. Please check your admin access.'
+      }
+      if (error.code === '42501') {
+        errorMessage = 'Database permission error. Please check RLS policies.'
+      }
+      
+      alert(errorMessage)
     }
   }
 
