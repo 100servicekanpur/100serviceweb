@@ -11,7 +11,6 @@ import {
   CurrencyDollarIcon,
   ChartBarIcon,
   ArrowTrendingUpIcon,
-  CalendarDaysIcon,
   ClockIcon
 } from '@heroicons/react/24/outline'
 
@@ -262,7 +261,7 @@ export default function AnalyticsPage() {
 
               {/* Today's Performance */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Today's Performance</h2>
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">Today&apos;s Performance</h2>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-blue-600">{recentStats.newUsersToday}</div>
@@ -355,48 +354,4 @@ export default function AnalyticsPage() {
       </AdminLayout>
     </RoleProtected>
   )
-}
-
-  return (
-    <AdminProtected>
-      <AdminLayout>
-        <div className="space-y-6">
-          <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-900">Total Users</h3>
-              <p className="text-3xl font-bold text-blue-600">{stats.totalUsers}</p>
-            </div>
-            
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-900">Total Services</h3>
-              <p className="text-3xl font-bold text-green-600">{stats.totalServices}</p>
-            </div>
-            
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-900">Total Bookings</h3>
-              <p className="text-3xl font-bold text-purple-600">{stats.totalBookings}</p>
-            </div>
-            
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-900">Total Categories</h3>
-              <p className="text-3xl font-bold text-orange-600">{stats.totalCategories}</p>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Analytics Dashboard</h3>
-            <p className="text-gray-600">Successfully migrated to MongoDB.</p>
-            <button
-              onClick={fetchAnalytics}
-              className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-            >
-              Refresh Data
-            </button>
-          </div>
-        </div>
-      </AdminLayout>
-    </AdminProtected>
-  );
 }
