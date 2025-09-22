@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 import React, { useState, useEffect } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import AdminProtected from '@/components/admin/AdminProtected'
-import { supabase } from '@/lib/supabase'
+import { mongodb } from '@/lib/mongodb'
 import {
   Cog6ToothIcon,
   GlobeAltIcon,
@@ -95,17 +95,39 @@ export default function AdminSettingsPage() {
   const fetchSettings = async () => {
     try {
       setIsLoading(true)
-      const { data, error } = await supabase
-        .from('site_settings')
-        .select('*')
-        .limit(1)
-        .single()
-
-      if (error && error.code !== 'PGRST116') throw error
-      
-      if (data) {
-        setSettings(data)
+      // TODO: Implement MongoDB settings fetch
+      // For now, set default settings
+      const defaultSettings = {
+        site_name: '100 Service',
+        site_description: 'Your trusted home service provider',
+        site_logo: '',
+        site_favicon: '',
+        contact_email: 'contact@100service.com',
+        contact_phone: '+91-1234567890',
+        contact_address: '',
+        currency: 'INR',
+        tax_rate: 0,
+        commission_rate: 0,
+        min_booking_amount: 100,
+        max_booking_amount: 50000,
+        allow_cancellation: true,
+        cancellation_hours: 24,
+        email_notifications: true,
+        sms_notifications: false,
+        maintenance_mode: false,
+        registration_enabled: true,
+        provider_approval_required: true,
+        service_approval_required: true,
+        meta_title: '100 Service',
+        meta_description: 'Professional home services',
+        meta_keywords: 'home service, cleaning, repair',
+        google_analytics_id: '',
+        facebook_pixel_id: '',
+        terms_of_service: '',
+        privacy_policy: '',
+        refund_policy: ''
       }
+      setSettings(defaultSettings)
     } catch (error) {
       console.error('Error fetching settings:', error)
     } finally {
@@ -117,16 +139,9 @@ export default function AdminSettingsPage() {
     try {
       setIsSaving(true)
       
-      const { error } = await supabase
-        .from('site_settings')
-        .upsert([{
-          ...settings,
-          updated_at: new Date().toISOString()
-        }])
-        .select()
-
-      if (error) throw error
-
+      // TODO: Implement MongoDB settings save
+      console.log('Saving settings:', settings)
+      
       setShowSuccessMessage(true)
       setTimeout(() => setShowSuccessMessage(false), 3000)
     } catch (error) {

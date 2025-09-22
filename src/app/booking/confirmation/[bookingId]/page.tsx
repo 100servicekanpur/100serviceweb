@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 import React, { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { supabase } from '@/lib/supabase'
+import { mongodb } from '@/lib/mongodb'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import {
@@ -73,19 +73,32 @@ export default function BookingConfirmation() {
     try {
       setLoading(true)
 
-      const { data: bookingData, error } = await supabase
-        .from('bookings')
-        .select(`
-          *,
-          service:services(title, short_description, images),
-          package:service_packages(name, description, features),
-          customer:users!user_id(full_name, email)
-        `)
-        .eq('id', bookingId)
-        .eq('user_id', user?.id)
-        .single()
-
-      if (error) throw error
+      // TODO: Implement MongoDB booking fetch
+      const bookingData = {
+        id: bookingId,
+        service: {
+          title: 'Sample Service',
+          short_description: 'Service description',
+          images: ['/placeholder-service.jpg']
+        },
+        package: {
+          name: 'Basic Package',
+          description: 'Package description',
+          features: ['Feature 1', 'Feature 2']
+        },
+        customer: {
+          full_name: user?.fullName || 'Customer Name',
+          email: user?.email || 'customer@example.com'
+        },
+        booking_date: '2024-01-15',
+        booking_time: '10:00',
+        total_amount: 999,
+        status: 'pending',
+        customer_address: '123 Main Street',
+        customer_phone: '+91-1234567890',
+        special_instructions: 'Sample instructions',
+        created_at: new Date().toISOString()
+      }
 
       setBooking(bookingData)
     } catch (error) {

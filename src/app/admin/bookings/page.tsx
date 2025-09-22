@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { mongodb } from '@/lib/mongodb';
 import AdminProtected from '@/components/admin/AdminProtected';
 import { 
   MagnifyingGlassIcon, 
@@ -30,7 +30,7 @@ interface Booking {
   service_date: string;
   service_time: string;
   booking_status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
-  payment_status: 'pending' | 'paid' | 'failed' | 'refunded';
+  payment_status: 'pending' | 'completed' | 'failed' | 'refunded';
   total_amount: number;
   booking_address: string;
   special_instructions: string;
@@ -58,34 +58,24 @@ export default function AdminBookings() {
 
   const fetchBookings = async () => {
     try {
-      const { data, error } = await supabase
-        .from('bookings')
-        .select(`
-          *,
-          services(name),
-          profiles!bookings_user_id_fkey(full_name, email, phone),
-          profiles!bookings_provider_id_fkey(full_name, phone)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      const formattedBookings = data?.map(booking => ({
-        id: booking.id,
-        service_name: booking.services?.name || 'Unknown Service',
-        customer_name: booking.profiles?.full_name || 'Unknown Customer',
-        customer_email: booking.profiles?.email || '',
-        customer_phone: booking.profiles?.phone || '',
-        provider_name: booking.provider_profile?.full_name || 'Unassigned',
-        provider_phone: booking.provider_profile?.phone || '',
-        service_date: booking.service_date,
-        service_time: booking.service_time,
+      const bookingsData = await mongodb.getAllBookings();
+      
+      const formattedBookings = bookingsData?.map(booking => ({
+        id: booking._id || '',
+        service_name: 'Service', // Will need to fetch service name separately
+        customer_name: 'Customer', // Will need to fetch customer name separately  
+        customer_email: '', // Will need to fetch customer email separately
+        customer_phone: booking.customerPhone || '',
+        provider_name: 'Provider', // Will need to fetch provider name separately
+        provider_phone: '', // Will need to fetch provider phone separately
+        service_date: booking.scheduledDate.toISOString().split('T')[0],
+        service_time: booking.scheduledTime,
         booking_status: booking.status,
-        payment_status: booking.payment_status,
-        total_amount: booking.total_amount,
-        booking_address: booking.address,
-        special_instructions: booking.special_instructions || '',
-        created_at: booking.created_at
+        payment_status: booking.paymentStatus,
+        total_amount: booking.totalAmount,
+        booking_address: booking.customerAddress,
+        special_instructions: booking.customerNotes || '',
+        created_at: booking.createdAt.toISOString()
       })) || [];
 
       setBookings(formattedBookings);
@@ -121,12 +111,7 @@ export default function AdminBookings() {
 
   const updateBookingStatus = async (id: string, status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled') => {
     try {
-      const { error } = await supabase
-        .from('bookings')
-        .update({ status: status })
-        .eq('id', id);
-
-      if (error) throw error;
+      await mongodb.updateBooking(id, { status });
 
       setBookings(prev => prev.map(booking =>
         booking.id === id
@@ -138,14 +123,9 @@ export default function AdminBookings() {
     }
   };
 
-  const updatePaymentStatus = async (bookingId: string, newStatus: 'pending' | 'paid' | 'failed' | 'refunded') => {
+  const updatePaymentStatus = async (bookingId: string, newStatus: 'pending' | 'completed' | 'failed' | 'refunded') => {
     try {
-      const { error } = await supabase
-        .from('bookings')
-        .update({ payment_status: newStatus })
-        .eq('id', bookingId);
-
-      if (error) throw error;
+      await mongodb.updateBooking(bookingId, { paymentStatus: newStatus });
 
       setBookings(prev => prev.map(booking =>
         booking.id === bookingId
@@ -164,7 +144,7 @@ export default function AdminBookings() {
       case 'in-progress': return 'bg-purple-100 text-purple-800';
       case 'completed': return 'bg-green-100 text-green-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
-      case 'paid': return 'bg-green-100 text-green-800';
+      case 'completed': return 'bg-green-100 text-green-800';
       case 'failed': return 'bg-red-100 text-red-800';
       case 'refunded': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
@@ -267,7 +247,7 @@ export default function AdminBookings() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">Revenue</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  ₹{bookings.filter(b => b.payment_status === 'paid').reduce((sum, b) => sum + b.total_amount, 0).toLocaleString()}
+                  ₹{bookings.filter(b => b.payment_status === 'completed').reduce((sum, b) => sum + b.total_amount, 0).toLocaleString()}
                 </p>
               </div>
             </div>
@@ -309,7 +289,7 @@ export default function AdminBookings() {
               >
                 <option value="all">All Payments</option>
                 <option value="pending">Payment Pending</option>
-                <option value="paid">Paid</option>
+                <option value="completed">Paid</option>
                 <option value="failed">Failed</option>
                 <option value="refunded">Refunded</option>
               </select>
@@ -401,11 +381,11 @@ export default function AdminBookings() {
                     <td className="px-6 py-4">
                       <select
                         value={booking.payment_status}
-                        onChange={(e) => updatePaymentStatus(booking.id, e.target.value as 'pending' | 'paid' | 'failed' | 'refunded')}
+                        onChange={(e) => updatePaymentStatus(booking.id, e.target.value as 'pending' | 'completed' | 'failed' | 'refunded')}
                         className={`text-xs px-2 py-1 rounded-full border-0 font-semibold ${getStatusColor(booking.payment_status)}`}
                       >
                         <option value="pending">Pending</option>
-                        <option value="paid">Paid</option>
+                        <option value="completed">Paid</option>
                         <option value="failed">Failed</option>
                         <option value="refunded">Refunded</option>
                       </select>

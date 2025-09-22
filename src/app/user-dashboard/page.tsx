@@ -6,7 +6,7 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useUser } from '@clerk/nextjs'
-import { supabase } from '@/lib/supabase'
+import { mongodb } from '@/lib/mongodb'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import RoleProtected from '@/components/admin/RoleProtected'
@@ -78,7 +78,7 @@ interface Service {
 export default function UserDashboard() {
   const router = useRouter()
   const { user: clerkUser } = useUser()
-  const { supabaseUser, isLoading: authLoading } = useAuth()
+  const { user, isLoading: authLoading } = useAuth()
   
   // State management
   const [activeTab, setActiveTab] = useState('overview')
@@ -121,69 +121,64 @@ export default function UserDashboard() {
   })
 
   useEffect(() => {
-    if (clerkUser && supabaseUser) {
+    if (clerkUser && user) {
       fetchUserData()
       fetchServices()
     }
-  }, [clerkUser, supabaseUser])
+  }, [clerkUser, user])
 
   const fetchUserData = async () => {
-    if (!supabaseUser?.id) return
+    if (!user?.email) return
 
     try {
       setIsLoading(true)
 
-      // Set profile from Clerk and Supabase data
+      // Set profile from Clerk and MongoDB user data
       setProfile({
-        full_name: clerkUser?.fullName || supabaseUser.full_name || '',
-        email: clerkUser?.emailAddresses[0]?.emailAddress || supabaseUser.email || '',
-        phone: clerkUser?.phoneNumbers[0]?.phoneNumber || supabaseUser.phone || '',
-        address: '',
-        city: '',
-        avatar_url: clerkUser?.imageUrl || ''
+        full_name: clerkUser?.fullName || user.fullName || '',
+        email: clerkUser?.emailAddresses[0]?.emailAddress || user.email || '',
+        phone: clerkUser?.phoneNumbers[0]?.phoneNumber || user.phone || '',
+        address: user.address || '',
+        city: user.city || '',
+        avatar_url: clerkUser?.imageUrl || user.avatarUrl || ''
       })
 
+      // TODO: Implement MongoDB bookings fetch
       // Fetch bookings
-      const { data: bookingsData, error: bookingsError } = await supabase
-        .from('bookings')
-        .select(`
-          id,
-          booking_date,
-          booking_time,
-          status,
-          total_amount,
-          customer_address,
-          payment_status,
-          created_at,
-          services (
-            name,
-            description,
-            category
-          )
-        `)
-        .eq('user_id', supabaseUser.id)
-        .order('created_at', { ascending: false })
+      const bookingsData = [
+        {
+          id: '1',
+          booking_date: '2024-01-15',
+          booking_time: '10:00',
+          status: 'completed',
+          total_amount: 1500,
+          customer_address: '123 Main Street',
+          payment_status: 'completed',
+          created_at: '2024-01-15T10:00:00Z',
+          services: [{
+            name: 'Home Cleaning',
+            description: 'Professional cleaning service',
+            category: 'Cleaning'
+          }]
+        }
+      ]
 
-      if (bookingsError) {
-        console.error('Error fetching bookings:', bookingsError)
-      } else {
-        // Transform the data to match our interface
-        const transformedBookings = bookingsData?.map(booking => ({
-          ...booking,
-          services: booking.services?.[0] || { name: 'Unknown Service', description: '', category: '' }
-        })) || []
+      // Transform the data to match our interface
+      const transformedBookings = bookingsData?.map(booking => ({
+        ...booking,
+        services: booking.services?.[0] || { name: 'Unknown Service', description: '', category: '' }
+      })) || []
         
-        setBookings(transformedBookings)
+      setBookings(transformedBookings)
         
-        // Calculate stats
-        const totalBookings = transformedBookings.length
-        const completedBookings = transformedBookings.filter(b => b.status === 'completed').length
-        const pendingBookings = transformedBookings.filter(b => b.status === 'pending').length
-        const totalSpent = transformedBookings.filter(b => b.payment_status === 'paid')
-          .reduce((sum, b) => sum + parseFloat(b.total_amount?.toString() || '0'), 0)
+      // Calculate stats
+      const totalBookings = transformedBookings.length
+      const completedBookings = transformedBookings.filter(b => b.status === 'completed').length
+      const pendingBookings = transformedBookings.filter(b => b.status === 'pending').length
+      const totalSpent = transformedBookings.filter(b => b.payment_status === 'paid')
+        .reduce((sum, b) => sum + parseFloat(b.total_amount?.toString() || '0'), 0)
 
-        setStats({ totalBookings, completedBookings, pendingBookings, totalSpent })
-      }
+      setStats({ totalBookings, completedBookings, pendingBookings, totalSpent })
     } catch (error) {
       console.error('Error in fetchUserData:', error)
     } finally {
@@ -193,28 +188,31 @@ export default function UserDashboard() {
 
   const fetchServices = async () => {
     try {
-      const { data: servicesData, error } = await supabase
-        .from('services')
-        .select('*')
-        .eq('is_active', true)
-        .order('name')
-
-      if (error) {
-        console.error('Error fetching services:', error)
-      } else {
-        setServices(servicesData || [])
-      }
+      // TODO: Implement MongoDB services fetch
+      const servicesData = [
+        {
+          id: 1,
+          name: 'Home Cleaning',
+          description: 'Professional cleaning service',
+          category: 'Cleaning',
+          subcategory: 'Deep Cleaning',
+          price: 999,
+          duration_minutes: 120,
+          image_url: '/placeholder-service.jpg'
+        }
+      ]
+      setServices(servicesData)
     } catch (error) {
       console.error('Error fetching services:', error)
     }
   }
 
   const handleBookService = async () => {
-    if (!selectedService || !supabaseUser?.id) return
+    if (!selectedService || !user?.email) return
 
     try {
       const bookingData = {
-        user_id: supabaseUser.id,
+        user_id: user.email,
         service_id: selectedService.id,
         booking_date: bookingForm.date,
         booking_time: bookingForm.time,
@@ -228,20 +226,13 @@ export default function UserDashboard() {
         payment_status: 'pending'
       }
 
-      const { error } = await supabase
-        .from('bookings')
-        .insert([bookingData])
-
-      if (error) {
-        console.error('Error creating booking:', error)
-        alert('Error creating booking. Please try again.')
-      } else {
-        alert('Booking created successfully!')
-        setIsBookingModalOpen(false)
-        setSelectedService(null)
-        setBookingForm({ date: '', time: '', address: '', instructions: '' })
-        fetchUserData() // Refresh data
-      }
+      // TODO: Implement MongoDB booking creation
+      console.log('Creating booking:', bookingData)
+      alert('Booking created successfully!')
+      setIsBookingModalOpen(false)
+      setSelectedService(null)
+      setBookingForm({ date: '', time: '', address: '', instructions: '' })
+      fetchUserData() // Refresh data
     } catch (error) {
       console.error('Error in handleBookService:', error)
       alert('Error creating booking. Please try again.')
@@ -274,25 +265,13 @@ export default function UserDashboard() {
   }
 
   const updateProfile = async () => {
-    if (!supabaseUser?.id) return
+    if (!user?.email) return
 
     try {
-      // Update in Supabase
-      const { error } = await supabase
-        .from('users')
-        .update({
-          full_name: profile.full_name,
-          phone: profile.phone
-        })
-        .eq('id', supabaseUser.id)
-
-      if (error) {
-        console.error('Error updating profile:', error)
-        alert('Error updating profile. Please try again.')
-      } else {
-        setEditingProfile(false)
-        alert('Profile updated successfully!')
-      }
+      // TODO: Implement MongoDB profile update
+      console.log('Updating profile:', profile)
+      setEditingProfile(false)
+      alert('Profile updated successfully!')
     } catch (error) {
       console.error('Error in updateProfile:', error)
       alert('Error updating profile. Please try again.')

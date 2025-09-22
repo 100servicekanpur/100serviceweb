@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import { supabase } from '@/lib/supabase'
+import { mongodb } from '@/lib/mongodb'
 import {
   MagnifyingGlassIcon,
   FunnelIcon,
@@ -77,49 +77,40 @@ export default function ServicesPage() {
     try {
       setLoading(true)
       
-      // Fetch categories
-      const { data: categoriesData, error: categoriesError } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true })
+      // TODO: Implement MongoDB categories fetch
+      const categoriesData = [
+        { id: '1', name: 'Home Cleaning', is_active: true, sort_order: 1 },
+        { id: '2', name: 'Plumbing', is_active: true, sort_order: 2 },
+        { id: '3', name: 'Electrical', is_active: true, sort_order: 3 }
+      ]
+      setCategories(categoriesData)
 
-      if (categoriesError) {
-        console.error('Error fetching categories:', categoriesError)
-      } else {
-        setCategories(categoriesData || [])
-      }
+      // TODO: Implement MongoDB subcategories fetch
+      const subcategoriesData = [
+        { id: '1', name: 'Deep Cleaning', category_id: '1', is_active: true, sort_order: 1 },
+        { id: '2', name: 'Regular Cleaning', category_id: '1', is_active: true, sort_order: 2 }
+      ]
+      setSubcategories(subcategoriesData)
 
-      // Fetch subcategories
-      const { data: subcategoriesData, error: subcategoriesError } = await supabase
-        .from('subcategories')
-        .select('*')
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true })
-
-      if (subcategoriesError) {
-        console.error('Error fetching subcategories:', subcategoriesError)
-      } else {
-        setSubcategories(subcategoriesData || [])
-      }
-
-      // Fetch services with category and subcategory data
-      const { data: servicesData, error: servicesError } = await supabase
-        .from('services')
-        .select(`
-          *,
-          categories:category_id (id, name),
-          subcategories:subcategory_id (id, name)
-        `)
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true })
-
-      if (servicesError) {
-        console.error('Error fetching services:', servicesError)
-      } else {
-        setServices(servicesData || [])
-        setFilteredServices(servicesData || [])
-      }
+      // TODO: Implement MongoDB services fetch
+      const servicesData = [
+        {
+          id: '1',
+          name: 'Professional Home Cleaning',
+          description: 'Complete home cleaning with professional equipment',
+          short_description: 'Comprehensive home cleaning service',
+          price: 999,
+          rating: 4.5,
+          duration_minutes: 120,
+          is_featured: true,
+          is_active: true,
+          total_bookings: 25,
+          categories: { id: '1', name: 'Home Cleaning' },
+          subcategories: { id: '1', name: 'Deep Cleaning' }
+        }
+      ]
+      setServices(servicesData)
+      setFilteredServices(servicesData)
     } catch (error) {
       console.error('Error in fetchData:', error)
     } finally {

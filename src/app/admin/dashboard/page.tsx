@@ -15,82 +15,67 @@ import {
   ClockIcon,
   CurrencyRupeeIcon
 } from '@heroicons/react/24/outline'
-import { supabase } from '@/lib/supabase'
+import { mongodb } from '@/lib/mongodb'
 
 interface DashboardStats {
   totalUsers: number
+  totalProviders: number
+  totalCustomers: number
   totalServices: number
+  approvedServices: number
+  pendingServices: number
   totalBookings: number
+  completedBookings: number
+  pendingBookings: number
   totalRevenue: number
-  pendingApprovals: number
   activeProviders: number
+}
+
+interface Activity {
+  _id: string
+  type: string
+  message: string
+  details: string
+  timestamp: string
 }
 
 export default function AdminDashboard() {
   const router = useRouter()
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
+    totalProviders: 0,
+    totalCustomers: 0,
     totalServices: 0,
+    approvedServices: 0,
+    pendingServices: 0,
     totalBookings: 0,
+    completedBookings: 0,
+    pendingBookings: 0,
     totalRevenue: 0,
-    pendingApprovals: 0,
     activeProviders: 0
   })
+  const [activities, setActivities] = useState<Activity[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    fetchDashboardStats()
+    fetchDashboardData()
   }, [])
 
-  const fetchDashboardStats = async () => {
+  const fetchDashboardData = async () => {
     try {
       setIsLoading(true)
 
-      // Fetch users count
-      const { count: usersCount } = await supabase
-        .from('users')
-        .select('*', { count: 'exact', head: true })
+      // Get comprehensive admin dashboard stats
+      const dashboardStats = await mongodb.getAdminDashboardStats()
+      
+      setStats(dashboardStats)
 
-      // Fetch services count
-      const { count: servicesCount } = await supabase
-        .from('services')
-        .select('*', { count: 'exact', head: true })
-
-      // Fetch bookings count
-      const { count: bookingsCount } = await supabase
-        .from('bookings')
-        .select('*', { count: 'exact', head: true })
-
-      // Fetch pending services
-      const { count: pendingCount } = await supabase
-        .from('services')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending')
-
-      // Fetch active providers
-      const { count: providersCount } = await supabase
-        .from('users')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'provider')
-
-      // Calculate total revenue (sum of completed bookings)
-      const { data: completedBookings } = await supabase
-        .from('bookings')
-        .select('total_amount')
-        .eq('status', 'completed')
-
-      const totalRevenue = completedBookings?.reduce((sum, booking) => sum + (booking.total_amount || 0), 0) || 0
-
-      setStats({
-        totalUsers: usersCount || 0,
-        totalServices: servicesCount || 0,
-        totalBookings: bookingsCount || 0,
-        totalRevenue,
-        pendingApprovals: pendingCount || 0,
-        activeProviders: providersCount || 0
-      })
+      // Get recent activities
+      const recentActivities = await mongodb.getRecentActivities(5)
+      setActivities(recentActivities)
+      
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error)
+      console.error('Error fetching dashboard data:', error)
     } finally {
       setIsLoading(false)
     }
@@ -168,16 +153,16 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Pending Approvals */}
+          {/* Pending Services */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center">
               <div className="p-3 bg-red-100 rounded-lg">
                 <ClockIcon className="w-6 h-6 text-red-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Pending Approvals</p>
+                <p className="text-sm font-medium text-gray-600">Pending Services</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {isLoading ? '...' : stats.pendingApprovals.toLocaleString()}
+                  {isLoading ? '...' : stats.pendingServices.toLocaleString()}
                 </p>
               </div>
             </div>
@@ -245,27 +230,40 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Activity</h2>
           <div className="space-y-4">
-            <div className="flex items-center p-4 bg-gray-50 rounded-lg">
-              <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">New service provider registered</p>
-                <p className="text-xs text-gray-600">2 minutes ago</p>
+            {isLoading ? (
+              <div className="animate-pulse space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center p-4 bg-gray-50 rounded-lg">
+                    <div className="w-2 h-2 bg-gray-300 rounded-full mr-3"></div>
+                    <div className="flex-1">
+                      <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+                      <div className="h-3 bg-gray-300 rounded w-1/4"></div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
-            <div className="flex items-center p-4 bg-gray-50 rounded-lg">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">Service approved: Home Cleaning</p>
-                <p className="text-xs text-gray-600">15 minutes ago</p>
+            ) : activities.length > 0 ? (
+              activities.map((activity) => (
+                <div key={activity._id} className="flex items-center p-4 bg-gray-50 rounded-lg">
+                  <div className={`w-2 h-2 rounded-full mr-3 ${
+                    activity.type === 'user_registered' ? 'bg-green-500' :
+                    activity.type === 'service_approved' ? 'bg-blue-500' :
+                    activity.type === 'booking_completed' ? 'bg-yellow-500' :
+                    'bg-gray-500'
+                  }`}></div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{activity.message}</p>
+                    <p className="text-xs text-gray-600">
+                      {new Date(activity.timestamp).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500">No recent activities found</p>
               </div>
-            </div>
-            <div className="flex items-center p-4 bg-gray-50 rounded-lg">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full mr-3"></div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">Booking completed: Electrical Repair</p>
-                <p className="text-xs text-gray-600">1 hour ago</p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

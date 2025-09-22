@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 import React, { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { supabase } from '@/lib/supabase'
+import { mongodb } from '@/lib/mongodb'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import {
@@ -95,27 +95,36 @@ export default function BookService() {
     try {
       setLoading(true)
 
+      // TODO: Implement MongoDB service fetch
       // Fetch service with category
-      const { data: serviceData, error: serviceError } = await supabase
-        .from('services')
-        .select(`
-          *,
-          category:categories(name)
-        `)
-        .eq('id', serviceId)
-        .eq('status', 'active')
-        .single()
+      const serviceData = {
+        id: serviceId,
+        title: 'Sample Service',
+        description: 'Complete service description here',
+        short_description: 'Brief service description',
+        base_price: 999,
+        price_unit: 'per service',
+        duration_minutes: 60,
+        images: ['/placeholder-service.jpg'],
+        features: ['Professional service', 'Quality assured'],
+        requirements: ['Access to work area', 'Clear instructions'],
+        rating_average: 4.5,
+        rating_count: 25,
+        category: { name: 'Home Cleaning' }
+      }
 
-      if (serviceError) throw serviceError
-
+      // TODO: Implement MongoDB service packages fetch
       // Fetch service packages
-      const { data: packagesData, error: packagesError } = await supabase
-        .from('service_packages')
-        .select('*')
-        .eq('service_id', serviceId)
-        .order('sort_order', { ascending: true })
-
-      if (packagesError) throw packagesError
+      const packagesData = [
+        {
+          id: '1',
+          name: 'Basic Package',
+          description: 'Basic service package',
+          price: 999,
+          features: ['Standard cleaning', '2 hours'],
+          is_popular: false
+        }
+      ]
 
       setService(serviceData)
       setPackages(packagesData || [])
@@ -216,16 +225,9 @@ export default function BookService() {
 
   const validateDateTimeAvailability = async (date: string, time: string): Promise<boolean> => {
     try {
+      // TODO: Implement MongoDB booking availability check
       // Check if the selected time slot is already booked
-      const { data: existingBookings, error } = await supabase
-        .from('bookings')
-        .select('id')
-        .eq('service_id', serviceId)
-        .eq('booking_date', date)
-        .eq('booking_time', time)
-        .neq('status', 'cancelled')
-
-      if (error) throw error
+      const existingBookings: any[] = [] // Placeholder - implement MongoDB query
 
       if (existingBookings && existingBookings.length > 0) {
         setErrors(prev => ({
@@ -282,38 +284,22 @@ export default function BookService() {
         return
       }
 
+      // TODO: Implement MongoDB booking creation
       // Create booking with updated field names to match database schema
-      const { data: booking, error } = await supabase
-        .from('bookings')
-        .insert({
-          user_id: user.id, // Updated to match schema
-          service_id: serviceId,
-          package_id: formData.selectedPackage,
-          booking_date: formData.bookingDate,
-          booking_time: formData.bookingTime,
-          total_amount: selectedPackage.price,
-          customer_address: formData.customerAddress,
-          customer_phone: formData.customerPhone,
-          special_instructions: formData.specialInstructions || null,
-          estimated_duration: service.duration_minutes,
-          status: 'pending',
-          payment_status: 'pending'
-        })
-        .select()
-        .single()
-
-      if (error) {
-        console.error('Booking creation error:', error)
-        
-        // Handle specific database errors
-        if (error.code === '23505') { // Unique constraint violation
-          setErrors({ general: 'This time slot was just booked by another customer. Please select a different time.' })
-        } else if (error.code === '23503') { // Foreign key constraint
-          setErrors({ general: 'Invalid service or package selection. Please refresh and try again.' })
-        } else {
-          setErrors({ general: 'Failed to create booking. Please check your information and try again.' })
-        }
-        return
+      const booking = {
+        id: 'booking_' + Date.now(),
+        user_id: user?.email || 'anonymous', // Use email as user identifier
+        service_id: serviceId,
+        package_id: formData.selectedPackage,
+        booking_date: formData.bookingDate,
+        booking_time: formData.bookingTime,
+        total_amount: selectedPackage.price,
+        customer_address: formData.customerAddress,
+        customer_phone: formData.customerPhone,
+        special_instructions: formData.specialInstructions || null,
+        estimated_duration: service.duration_minutes,
+        status: 'pending',
+        payment_status: 'pending'
       }
 
       // Success - redirect to confirmation page

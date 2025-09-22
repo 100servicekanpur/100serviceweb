@@ -135,7 +135,7 @@ export default function AdminLoginPage() {
         <SignedIn>
           <div className="mt-8 bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 text-center">
             <div className="text-white mb-4">
-              Welcome back, {user?.name || user?.email}!
+              Welcome back, {user?.email}!
             </div>
             {isAdmin ? (
               <Link

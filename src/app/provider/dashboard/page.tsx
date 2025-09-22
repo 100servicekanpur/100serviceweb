@@ -5,9 +5,10 @@ export const dynamic = 'force-dynamic'
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { supabase } from '@/lib/supabase'
+import { mongodb } from '@/lib/mongodb'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import RoleProtected from '@/components/admin/RoleProtected'
 import {
   CalendarIcon,
   ClockIcon,
@@ -97,20 +98,34 @@ export default function ProviderDashboard() {
     try {
       setLoading(true)
 
+      // TODO: Implement MongoDB provider bookings fetch
       // Fetch bookings assigned to this provider
-      // Fetch provider's bookings through services
-      const { data: bookingsData, error: bookingsError } = await supabase
-        .from('bookings')
-        .select(`
-          *,
-          service:services!inner(title, short_description, provider_id),
-          package:service_packages(name),
-          customer:users!user_id(full_name, email, phone)
-        `)
-        .eq('service.provider_id', user?.id)
-        .order('created_at', { ascending: false })
-
-      if (bookingsError) throw bookingsError
+      const bookingsData = [
+        {
+          id: '1',
+          user_id: 'customer1',
+          status: 'completed',
+          total_amount: 1500,
+          booking_date: '2024-01-15',
+          booking_time: '10:00',
+          customer_address: '123 Main Street',
+          customer_phone: '+91-9876543210',
+          special_instructions: 'Please be careful with plants',
+          created_at: '2024-01-15T10:00:00Z',
+          actual_start_time: '2024-01-15T10:00:00Z',
+          actual_end_time: '2024-01-15T12:00:00Z',
+          service: {
+            title: 'Home Cleaning',
+            short_description: 'Professional cleaning service'
+          },
+          package: { name: 'Basic Package' },
+          customer: {
+            full_name: 'John Doe',
+            email: 'john@example.com',
+            phone: '+91-9876543210'
+          }
+        }
+      ]
 
       // Calculate stats
       const totalEarnings = bookingsData
@@ -134,7 +149,7 @@ export default function ProviderDashboard() {
         })
         .reduce((sum, b) => sum + (b.total_amount || 0), 0) || 0
 
-      const uniqueCustomers = new Set(bookingsData?.map(b => b.customer_id)).size
+      const uniqueCustomers = new Set(bookingsData?.map(b => b.user_id)).size
 
       setBookings(bookingsData || [])
       setStats({
@@ -191,12 +206,8 @@ export default function ProviderDashboard() {
           break
       }
 
-      const { error } = await supabase
-        .from('bookings')
-        .update(updateData)
-        .eq('id', bookingId)
-
-      if (error) throw error
+      // TODO: Implement MongoDB booking status update
+      console.log('Updating booking status:', bookingId, newStatus)
 
       // Create status change notification for customer
       await createStatusNotification(bookingId, newStatus)
@@ -306,11 +317,12 @@ export default function ProviderDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-7xl mx-auto">
+    <RoleProtected requiredRole="provider">
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-7xl mx-auto">
           
           {/* Header */}
           <div className="mb-8">
@@ -621,9 +633,10 @@ export default function ProviderDashboard() {
             </div>
           )}
         </div>
-      </div>
+        </div>
 
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </RoleProtected>
   )
 }

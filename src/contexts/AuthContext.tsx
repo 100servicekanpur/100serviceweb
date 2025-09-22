@@ -3,20 +3,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { useUser, useClerk } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
-
-interface User {
-  id: string
-  email: string
-  name: string
-  full_name: string
-  phone: string
-  role?: string
-}
+import { mongodb } from '@/lib/mongodb'
+import type { User } from '@/lib/mongodb-types'
 
 interface AuthContextType {
   user: User | null
-  supabaseUser: User | null
   isLoading: boolean
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   register: (email: string, password: string, name: string, phone?: string) => Promise<{ success: boolean; error?: string }>
@@ -33,160 +24,80 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { user: clerkUser, isLoaded } = useUser()
   const { signOut } = useClerk()
   const router = useRouter()
-  const [supabaseUser, setSupabaseUser] = useState<User | null>(null)
-  const [isLoadingSupabase, setIsLoadingSupabase] = useState(false)
+  const [mongoUser, setMongoUser] = useState<User | null>(null)
+  const [isLoadingMongo, setIsLoadingMongo] = useState(false)
 
-  // Check if Clerk is properly configured
-  if (typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
-    console.warn('Clerk publishable key is missing. Please check your environment variables.')
-  }
-
-  // Fetch user data from Supabase when Clerk user changes
   useEffect(() => {
-    const fetchSupabaseUser = async (clerkUser: any) => {
+    const fetchMongoUser = async (clerkUser: any) => {
       try {
-        console.log('🔍 Fetching Supabase user for Clerk ID:', clerkUser.id)
+        setIsLoadingMongo(true)
+        let user = await mongodb.findUserByClerkId(clerkUser.id)
         
-        // Look up by Clerk ID first
-        let { data: user, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', clerkUser.id)
-          .single()
-
-        if (error && error.code === 'PGRST116') {
-          // User doesn't exist, create them
-          console.log('👤 User not found, creating new user')
-          await createSupabaseUser()
-          
-          // Try to fetch again
-          const { data: newUser, error: fetchError } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', clerkUser.id)
-            .single()
-
-          if (fetchError) {
-            console.error('❌ Error fetching newly created user:', fetchError)
-            setSupabaseUser(null)
-            return null
-          }
-          
-          user = newUser
-        } else if (error) {
-          console.error('❌ Error fetching user:', error)
-          setSupabaseUser(null)
-          return null
+        if (!user) {
+          await createMongoUser(clerkUser)
+          user = await mongodb.findUserByClerkId(clerkUser.id)
         }
-
-        console.log('✅ Supabase user found:', user)
-        // THIS WAS MISSING - SET THE STATE!
-        setSupabaseUser(user)
-        return user
+        setMongoUser(user)
       } catch (err) {
-        console.error('💥 Error in fetchSupabaseUser:', err)
-        setSupabaseUser(null)
-        return null
+        console.error('Error in fetchMongoUser:', err)
+        setMongoUser(null)
+      } finally {
+        setIsLoadingMongo(false)
       }
     }
 
-  const createSupabaseUser = async () => {
+    const createMongoUser = async (clerkUser: any) => {
       if (!clerkUser) return
-
-      try {
-        // Use Clerk user ID directly since our database now supports it
-        const userData = {
-          id: clerkUser.id, // Use Clerk ID directly
-          email: clerkUser.emailAddresses[0]?.emailAddress || '',
-          full_name: clerkUser.fullName || '',
-          phone: clerkUser.phoneNumbers[0]?.phoneNumber || '',
-          role: clerkUser.emailAddresses[0]?.emailAddress === 'v9ibhav@gmail.com' ? 'admin' : 'customer',
-          is_verified: true
-        }
-
-        console.log('Creating Supabase user with Clerk ID:', userData)
-
-        const { data: newUser, error } = await supabase
-          .from('users')
-          .insert([userData])
-          .select()
-          .single()
-
-        if (error) {
-          console.error('❌ Error creating user in Supabase:', error)
-          console.error('Error details:', {
-            code: error.code,
-            message: error.message,
-            details: error.details,
-            hint: error.hint
-          })
-          if (error.code === '42P01') {
-            console.error('🚨 DATABASE NOT SET UP: users table does not exist!')
-            console.error('Please run the clerk-supabase-setup.sql script in your Supabase dashboard')
-          }
-        } else {
-          console.log('✅ User created successfully:', newUser)
-          // Don't set state here - fetchSupabaseUser will handle it
-        }
-      } catch (err) {
-        console.error('💥 Error in createSupabaseUser:', err)
+      const userData: Omit<User, '_id' | 'createdAt' | 'updatedAt'> = {
+        clerkId: clerkUser.id,
+        email: clerkUser.emailAddresses?.[0]?.emailAddress || '',
+        fullName: clerkUser.fullName || clerkUser.firstName || 'User',
+        phone: clerkUser.phoneNumbers?.[0]?.phoneNumber || undefined,
+        role: clerkUser.emailAddresses?.[0]?.emailAddress === 'v9ibhav@gmail.com' ? 'admin' : 'customer',
+        isVerified: clerkUser.emailAddresses?.[0]?.verification?.status === 'verified'
       }
+      await mongodb.createUser(userData)
     }
 
-    if (clerkUser && isLoaded) {
-      fetchSupabaseUser(clerkUser)
+    if (isLoaded && clerkUser) {
+      fetchMongoUser(clerkUser)
     } else if (!clerkUser) {
-      setSupabaseUser(null)
+      setMongoUser(null)
+      setIsLoadingMongo(false)
     }
   }, [clerkUser, isLoaded])
 
-  // Create compatible user object for legacy code
-  const compatUser = clerkUser ? {
-    id: clerkUser.id,
-    email: clerkUser.emailAddresses[0]?.emailAddress || '',
-    name: clerkUser.fullName || '',
-    full_name: clerkUser.fullName || '',
-    phone: clerkUser.phoneNumbers[0]?.phoneNumber || '',
-    role: supabaseUser?.role || 'user'
-  } : null
-
-  // Role check helpers
-  const userRole = supabaseUser?.role || compatUser?.role || 'user'
-  const isAdmin = userRole === 'admin'
-  const isProvider = userRole === 'provider'
-  const isUser = userRole === 'user'
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const login = async (email: string, password: string) => {
-    router.push('/sign-in')
-    return { success: false, error: 'Please use the sign-in page' }
+  const login = async () => {
+    return { success: false, error: 'Please use Clerk sign-in' }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const register = async (email: string, password: string, name: string, phone?: string) => {
-    router.push('/sign-up')
-    return { success: false, error: 'Please use the sign-up page' }
+  const register = async () => {
+    return { success: false, error: 'Please use Clerk sign-up' }
   }
 
   const logout = async () => {
     await signOut()
+    setMongoUser(null)
     router.push('/')
   }
 
-  const value: AuthContextType = {
-    user: compatUser,
-    supabaseUser,
-    isLoading: !isLoaded || isLoadingSupabase,
-    login,
-    register,
-    logout,
-    isAuthenticated: !!clerkUser,
-    isAdmin,
-    isProvider,
-    isUser
-  }
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider
+      value={{
+        user: mongoUser,
+        isLoading: !isLoaded || isLoadingMongo,
+        login,
+        register,
+        logout,
+        isAuthenticated: !!clerkUser && isLoaded,
+        isAdmin: mongoUser?.role === 'admin',
+        isProvider: mongoUser?.role === 'provider',
+        isUser: mongoUser?.role === 'customer',
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {
