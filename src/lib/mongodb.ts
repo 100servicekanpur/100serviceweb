@@ -414,6 +414,33 @@ class MongoDBService {
     )
     return { ...profile, _id: result.insertedIds[0] }
   }
+
+  // Settings operations
+  async getSystemSettings(): Promise<any> {
+    const result = await this.executeQuery<FindResult<any>>('find',
+      DATABASE_NAME,
+      'settings',
+      { type: 'system' },
+      { limit: 1 }
+    )
+    return result.documents[0] || null
+  }
+
+  async updateSystemSettings(settings: any): Promise<void> {
+    await this.executeQuery('updateMany',
+      DATABASE_NAME,
+      'settings',
+      { type: 'system' },
+      { 
+        $set: { 
+          ...settings,
+          type: 'system',
+          updatedAt: new Date()
+        }
+      },
+      { upsert: true }
+    )
+  }
 }
 
 // Export singleton instance

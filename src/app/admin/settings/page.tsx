@@ -95,39 +95,44 @@ export default function AdminSettingsPage() {
   const fetchSettings = async () => {
     try {
       setIsLoading(true)
-      // TODO: Implement MongoDB settings fetch
-      // For now, set default settings
-      const defaultSettings = {
-        site_name: '100 Service',
-        site_description: 'Your trusted home service provider',
-        site_logo: '',
-        site_favicon: '',
-        contact_email: 'contact@100service.com',
-        contact_phone: '+91-1234567890',
-        contact_address: '',
-        currency: 'INR',
-        tax_rate: 0,
-        commission_rate: 0,
-        min_booking_amount: 100,
-        max_booking_amount: 50000,
-        allow_cancellation: true,
-        cancellation_hours: 24,
-        email_notifications: true,
-        sms_notifications: false,
-        maintenance_mode: false,
-        registration_enabled: true,
-        provider_approval_required: true,
-        service_approval_required: true,
-        meta_title: '100 Service',
-        meta_description: 'Professional home services',
-        meta_keywords: 'home service, cleaning, repair',
-        google_analytics_id: '',
-        facebook_pixel_id: '',
-        terms_of_service: '',
-        privacy_policy: '',
-        refund_policy: ''
+      // Fetch settings from MongoDB
+      const settingsData = await mongodb.getSystemSettings()
+      if (settingsData) {
+        setSettings(settingsData)
+      } else {
+        // Set default settings if none exist
+        const defaultSettings = {
+          site_name: '100 Service',
+          site_description: 'Your trusted home service provider',
+          site_logo: '',
+          site_favicon: '',
+          contact_email: 'contact@100service.com',
+          contact_phone: '+91-1234567890',
+          contact_address: '',
+          currency: 'INR',
+          tax_rate: 0,
+          commission_rate: 0,
+          min_booking_amount: 100,
+          max_booking_amount: 50000,
+          allow_cancellation: true,
+          cancellation_hours: 24,
+          email_notifications: true,
+          sms_notifications: false,
+          maintenance_mode: false,
+          registration_enabled: true,
+          provider_approval_required: true,
+          service_approval_required: true,
+          meta_title: '100 Service',
+          meta_description: 'Professional home services',
+          meta_keywords: 'home service, cleaning, repair',
+          google_analytics_id: '',
+          facebook_pixel_id: '',
+          terms_of_service: '',
+          privacy_policy: '',
+          refund_policy: ''
+        }
+        setSettings(defaultSettings)
       }
-      setSettings(defaultSettings)
     } catch (error) {
       console.error('Error fetching settings:', error)
     } finally {
@@ -139,8 +144,8 @@ export default function AdminSettingsPage() {
     try {
       setIsSaving(true)
       
-      // TODO: Implement MongoDB settings save
-      console.log('Saving settings:', settings)
+      // Save settings to MongoDB
+      await mongodb.updateSystemSettings(settings)
       
       setShowSuccessMessage(true)
       setTimeout(() => setShowSuccessMessage(false), 3000)
